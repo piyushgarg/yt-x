@@ -143,6 +143,10 @@ Pr's are highly welcomed.
 - [x] Update script option
 - [ ] Add ability to generate mixes based on a video
 - [ ] Add caching for faster load times when loading data with yt-dlp
+- [ ] implement pseudo subscriptions as explore channels
+- [ ] explore playlists
+- [ ] save current playlist
+- [ ] search and filter
 
 **Fix:**
 
