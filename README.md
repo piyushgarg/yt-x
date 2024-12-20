@@ -147,6 +147,7 @@ Pr's are highly welcomed.
 - [ ] explore playlists
 - [ ] save current playlist
 - [ ] search and filter
+- [ ] work on playlist previews
 
 **Fix:**
 
