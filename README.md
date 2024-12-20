@@ -1,5 +1,3 @@
-# YT-X
-
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/Benex254/yt-x)
 ![GitHub License](https://img.shields.io/github/license/Benex254/yt-x)
 ![GitHub file size in bytes](https://img.shields.io/github/size/Benex254/yt-x/yt-x)
@@ -8,7 +6,8 @@
 
 Browse YouTube from your terminal.
 
-[yt-x.webm](https://github.com/user-attachments/assets/d96f474d-4735-4ce5-9808-3c6c81e44d25)
+[yt-x-demo](https://github.com/user-attachments/assets/32333e25-8617-40d4-9913-7c212da66f76)
+
 
 <details>
 <summary>Browse Channels You Have Subscribed To From The Terminal</summary>
