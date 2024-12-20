@@ -6,8 +6,7 @@
 
 Browse YouTube from your terminal.
 
-[yt-x-demo](https://github.com/user-attachments/assets/32333e25-8617-40d4-9913-7c212da66f76)
-
+[yt-x.webm](https://github.com/user-attachments/assets/d4aa3329-c009-4625-84a6-390519595648)
 
 <details>
 <summary>Browse Channels You Have Subscribed To From The Terminal</summary>
