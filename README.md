@@ -148,6 +148,12 @@ Pr's are highly welcomed.
 - [ ] save current playlist
 - [ ] search and filter
 - [ ] work on playlist previews
+- [ ] option to setup desktop notifications for a channel you want to get updates on new videos
+- [ ] previews in rofi mode
+- [ ] view shorts for a specific channel
+- [ ] view podcasts for a specific channel
+- [ ] consolidate playlist exploring code to one function
+- [ ] consolidate channel exploring code to one function
 
 **Fix:**
 
