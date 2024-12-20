@@ -8,7 +8,7 @@
 
 Browse YouTube from your terminal.
 
-[yt-x-search.webm](https://github.com/user-attachments/assets/e61bc8f1-e29d-4c13-a293-44e9ca706a0d)
+[yt-x.webm](https://github.com/user-attachments/assets/d96f474d-4735-4ce5-9808-3c6c81e44d25)
 
 <details>
 <summary>Browse Channels You Have Subscribed To From The Terminal</summary>
