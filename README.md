@@ -56,7 +56,7 @@ Browse YouTube from your terminal.
 nix profile install github:Benexl/yt-x
 
 # latest release
-curl -sL "https://raw.githubusercontent.com/Benexl/yt-x/refs/tags/0.3.0/yt-x" -o ~/.local/bin/yt-x && chmod +x ~/.local/bin/yt-x
+curl -sL "https://raw.githubusercontent.com/Benexl/yt-x/refs/tags/<latest-release-tag>/yt-x" -o ~/.local/bin/yt-x && chmod +x ~/.local/bin/yt-x
 
 # Development version
 curl -sL "https://raw.githubusercontent.com/Benexl/yt-x/refs/heads/master/yt-x" -o ~/.local/bin/yt-x && chmod +x ~/.local/bin/yt-x
@@ -96,6 +96,7 @@ To enable imports of subscriptions and viewing of private playlists and videos
 set your preferred browser in your config file
 
 For Example:
+
 ```ini
 PREFERRED_BROWSER: chrome
 ```
