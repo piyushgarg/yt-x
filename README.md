@@ -154,6 +154,7 @@ Pr's are highly welcomed.
 - [ ] view podcasts for a specific channel
 - [ ] consolidate playlist exploring code to one function
 - [ ] consolidate channel exploring code to one function
+- [ ] make the code posix compliant
 
 **Fix:**
 
@@ -179,3 +180,8 @@ You can find me here incase you need any help setting it up or just want to hang
 <img src="https://invidget.switchblade.xyz/C4rhMA4mmK">
 </a>
 </p>
+
+# supporting the project
+Give the project a star and consider directly contributing the code.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y8ZAA7N)
