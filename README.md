@@ -152,7 +152,7 @@ Pr's are highly welcomed.
 - [x] view podcasts for a specific channel
 - [x] consolidate playlist exploring code to one function
 - [ ] consolidate channel exploring code to one function
-- [ ] make the code posix compliant
+- [x] make the code posix compliant
 
 **Fix:**
 
