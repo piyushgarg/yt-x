@@ -173,7 +173,7 @@ update_script() {
 			send_notification "Can't update for some reason!"
 		fi
 	fi
-	byebye
+	exec "$yt_x_path"
 }
 
 check_update() {
