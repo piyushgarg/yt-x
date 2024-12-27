@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 #A script written by Benexl in September 2024 under MIT LICENSE
 
 CLI_HEADER='
@@ -72,7 +72,7 @@ PLAYER: $PLAYER
 
 # the browser to use to extract cookies from
 # this is used to by yt-dlp to access content that would require login
-PREFERRED_BROWSER: ${PREFERRED_BROWSER[1]}
+PREFERRED_BROWSER: $(echo "$PREFERRED_BROWSER" | sed 's/--cookies-from-browser //g')
 
 # the number of results to get from yt-dlp
 NO_OF_SEARCH_RESULTS: $NO_OF_SEARCH_RESULTS
@@ -113,7 +113,7 @@ load_config() {
 	[ -z "$PLAYER" ] && PLAYER='mpv'
 
 	PREFERRED_BROWSER="$(awk -F': ' '/^PREFERRED_BROWSER:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
-	[ -n "$PREFERRED_BROWSER" ] && PREFERRED_BROWSER=("--cookies-from-browser" "$PREFERRED_BROWSER")
+	[ -n "$PREFERRED_BROWSER" ] && PREFERRED_BROWSER="--cookies-from-browser $PREFERRED_BROWSER"
 
 	NO_OF_SEARCH_RESULTS="$(awk -F': ' '/^NUMBER_OF_SEARCH_RESULTS:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	[ -z "$NO_OF_SEARCH_RESULTS" ] && NO_OF_SEARCH_RESULTS=30
@@ -123,7 +123,7 @@ load_config() {
 
 	DOWNLOAD_DIRECTORY="$(awk -F': ' '/^DOWNLOAD_DIRECTORY:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	[ -z "$DOWNLOAD_DIRECTORY" ] && DOWNLOAD_DIRECTORY="$HOME/Videos/$CLI_NAME"
-	[ -d "${DOWNLOAD_DIRECTORY/#\~\//$HOME/}" ] || mkdir -p "${DOWNLOAD_DIRECTORY/#\~\//$HOME/}"
+	[ -d "$DOWNLOAD_DIRECTORY" ] || mkdir -p "$DOWNLOAD_DIRECTORY"
 
 	! [ -f "$CLI_CONFIG_DIR/${CLI_NAME}.conf" ] && print_config >"$CLI_CONFIG_DIR/${CLI_NAME}.conf"
 
@@ -194,32 +194,27 @@ check_update() {
 # Adapted from the preview script in the fzf repo
 fzf_preview() {
 
-	file=${1/#\~\//$HOME/}
-	type=$(file --dereference --mime -- "$file")
-
-	if [[ ! $type =~ image/ ]]; then
-		echo Loading...
-		return 1
-	fi
+	file=$1
 
 	dim=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}
-	if [[ $dim = x ]]; then
+	if [ "$dim" = x ]; then
 		dim=$(stty size </dev/tty | awk '{print $2 "x" $1}')
-	elif ! [[ $KITTY_WINDOW_ID ]] && ((FZF_PREVIEW_TOP + FZF_PREVIEW_LINES == $(stty size </dev/tty | awk '{print $1}'))); then
+	fi
+	if [ -z "$KITTY_WINDOW_ID" ] && [ "$((FZF_PREVIEW_TOP + FZF_PREVIEW_LINES))" -eq "$(stty size </dev/tty | awk '{print $1}')" ]; then
 		# Avoid scrolling issue when the Sixel image touches the bottom of the screen
 		# * https://github.com/junegunn/fzf/issues/2544
 		dim=${FZF_PREVIEW_COLUMNS}x$((FZF_PREVIEW_LINES - 1))
 	fi
 
 	# 1. Use kitty icat on kitty terminal
-	if [[ $KITTY_WINDOW_ID ]]; then
+	if [ -n "$KITTY_WINDOW_ID" ]; then
 		# 1. 'memory' is the fastest option but if you want the image to be scrollable,
 		#    you have to use 'stream'.
 		#
 		# 2. The last line of the output is the ANSI reset code without newline.
 		#    This confuses fzf and makes it render scroll offset indicator.
 		#    So we remove the last line and append the reset code to its previous line.
-		kitty icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="$dim@0x0" "$file" | sed '$d' | sed $'$s/$/\e[m/'
+		kitty icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="$dim@0x0" "$file" | sed '$d' | sed "$(printf '$s/$/\033[m/')"
 
 		# 2. Use chafa with Sixel output
 	elif command -v chafa >/dev/null; then
@@ -239,7 +234,7 @@ fzf_preview() {
 
 		# 4. Use ueberzug image preview
 	elif command -v ueberzug >/dev/null; then
-		if [[ -n "$(pgrep ueberzug)" ]]; then
+		if [ -n "$(pgrep ueberzug)" ]; then
 			killall ueberzug
 		fi
 
@@ -264,11 +259,12 @@ fzf_preview() {
 }
 
 confirm() {
-	if command -v "gum" &>/dev/null; then
+	if command -v "gum" >/dev/null 2>&1; then
 		gum confirm "$1"
 	else
 		echo "$CLI_HEADER" >/dev/stderr
-		read -r -p 'Are you sure you want to proceed [y/N]?: ' CONFIRMED
+		printf 'Are you sure you want to proceed [y/N]?: '
+		read -r CONFIRMED
 		case "$CONFIRMED" in
 		y | Y)
 			return 0
@@ -304,8 +300,8 @@ generate_text_preview() {
 	[ -z "$search_results" ] && return 1
 	ids="$(echo "$1" | jq '.entries[].id' -r 2>/dev/null)"
 
-	# [ -f "$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt" ] && rm "$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt"
-	for ((i = 1; i <= "$(echo "$ids" | wc -l)"; i++)); do
+	lines="$(echo "$ids" | wc -l)"
+	for i in $(seq 1 "$lines"); do
 		video=$(echo "$1" | jq ".entries[$((i - 1))]")
 		title=$(echo "$video" | jq ".title" -r | sed 's/"/\\\\"/g;s/%/%%/g;s/\$/\\\\$/g;s/^.. //g')
 		id=$(echo "$video" | jq '.id' -r)
@@ -445,7 +441,8 @@ download_preview_images() {
 	urls="$(echo "$1" | jq '.entries[].thumbnails[-1].url' -r 2>/dev/null)"
 
 	[ -f "$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt" ] && rm "$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt"
-	for ((i = 1; i <= "$(echo "$ids" | wc -l)"; i++)); do
+	lines="$(echo "$ids" | wc -l)"
+	for i in $(seq 1 "$lines"); do
 		video=$(echo "$1" | jq ".entries[$((i - 1))]")
 		echo "url = \"${2}$(echo "$urls" | head -n $i | tail -n 1)\"" >>"$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt"
 		echo "output = \"$CLI_PREVIEW_IMAGES_CACHE_DIR/$(echo "$video" | jq '.id' -r).jpg\"" >>"$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt"
@@ -479,18 +476,11 @@ launcher_with_preview() {
 init_pretty_print() {
 	if [ "$PRETTY_PRINT" = "true" ]; then
 		RED=$(tput setaf 1)
-		GREEN=$(tput setaf 2)
-		YELLOW=$(tput setaf 3)
-		BLUE=$(tput setaf 4)
-		# MAGENTA=$(tput setaf 5)
 		MAGENTA="\x1b[38;2;215;0;95m"
 		CYAN=$(tput setaf 6)
-		WHITE=$(tput setaf 7)
 		BOLD=$(tput bold)
-		BLACK=$(tput setaf 0)
 		RESET=$(tput sgr0)
 	fi
-
 }
 byebye() {
 	clear
@@ -498,27 +488,28 @@ byebye() {
 	exit "${1:-0}"
 }
 prompt() {
-	if command -v "gum" &>/dev/null; then
+	if command -v "gum" >/dev/null 2>&1; then
 		gum input --header "$CLI_HEADER" --prompt "$1: "
 	else
 		echo "$CLI_HEADER" >/dev/stderr
-		read -r -p "$1: " VAL
+		printf "%s: " "$1"
+		read -r VAL
 		echo "$VAL"
 	fi
 }
 run_yt_dlp() {
-	if command -v "gum" &>/dev/null; then
-		gum spin --show-output -- yt-dlp "$1" -J --flat-playlist --extractor-args youtubetab:approximate_date --playlist-start "$PLAYLIST_START" --playlist-end "$PLAYLIST_END" "${PREFERRED_BROWSER[@]}"
+	if command -v "gum" >/dev/null 2>&1; then
+		gum spin --show-output -- yt-dlp "$1" -J --flat-playlist --extractor-args youtubetab:approximate_date --playlist-start "$PLAYLIST_START" --playlist-end "$PLAYLIST_END" $PREFERRED_BROWSER
 	else
 		echo "Loading..." >/dev/stderr
-		yt-dlp "$1" -J --flat-playlist --extractor-args youtubetab:approximate_date --playlist-start "$PLAYLIST_START" --playlist-end "$PLAYLIST_END" "${PREFERRED_BROWSER[@]}"
+		yt-dlp "$1" -J --flat-playlist --extractor-args youtubetab:approximate_date --playlist-start "$PLAYLIST_START" --playlist-end "$PLAYLIST_END" $PREFERRED_BROWSER
 	fi
 }
 
 core_dep_ch() {
-	! command -v "yt-dlp" &>/dev/null && echo yt-dlp is not installed and is a core dep please install it to proceed && exit 1
-	! command -v "jq" &>/dev/null && echo jq is not installed and is a core dep please install it to proceed && exit 1
-	! command -v "fzf" &>/dev/null && echo fzf is not installed and is a core dep please install it to proceed && exit 1
+	! command -v "yt-dlp" >/dev/null 2>&1 && echo yt-dlp is not installed and is a core dep please install it to proceed && exit 1
+	! command -v "jq" >/dev/null 2>&1 && echo jq is not installed and is a core dep please install it to proceed && exit 1
+	! command -v "fzf" >/dev/null 2>&1 && echo fzf is not installed and is a core dep please install it to proceed && exit 1
 }
 trap byebye INT TERM
 PREVIEW_SCRIPT_FOR_VIDEOS="
@@ -624,7 +615,7 @@ playlist_explorer() {
 			;;
 		esac
 		# Sometimes the ueberzug process lurks in the background
-		if [[ -n "$(pgrep ueberzug)" ]]; then
+		if [ -n "$(pgrep ueberzug)" ]; then
 			killall ueberzug
 		fi
 
@@ -666,16 +657,16 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				;;
 			"Download All")
 				if [ -n "$urlForAll" ]; then
-					yt-dlp "$urlForAll" --output "$DOWNLOAD_DIRECTORY/videos/%(channel)s/%(title)s.%(ext)s" "${PREFERRED_BROWSER[@]}"
+					yt-dlp "$urlForAll" --output "$DOWNLOAD_DIRECTORY/videos/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				else
-					yt-dlp "$url" --output "$DOWNLOAD_DIRECTORY/videos/%(channel)s/%(title)s.%(ext)s" "${PREFERRED_BROWSER[@]}"
+					yt-dlp "$url" --output "$DOWNLOAD_DIRECTORY/videos/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				fi
 				;;
 			"Download All (Audio Only)")
 				if [ -n "$urlForAll" ]; then
-					yt-dlp "$urlForAll" -x --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/%(channel)s/%(title)s.%(ext)s" "${PREFERRED_BROWSER[@]}"
+					yt-dlp "$urlForAll" -x --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				else
-					yt-dlp "$url" -x --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/%(channel)s/%(title)s.%(ext)s" "${PREFERRED_BROWSER[@]}"
+					yt-dlp "$url" -x --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				fi
 				;;
 			Listen)
@@ -745,11 +736,11 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				;;
 			Download)
 				video_url=$(echo "$video" | jq '.url' -r)
-				yt-dlp "$video_url" --output "$DOWNLOAD_DIRECTORY/videos/%(channel)s/%(title)s.%(ext)s" "${PREFERRED_BROWSER[@]}"
+				yt-dlp "$video_url" --output "$DOWNLOAD_DIRECTORY/videos/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				;;
 			"Download (Audio Only)")
 				video_url=$(echo "$video" | jq '.url' -r)
-				yt-dlp "$video_url" -x --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/%(channel)s/%(title)s.%(ext)s" "${PREFERRED_BROWSER[@]}"
+				yt-dlp "$video_url" -x --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				;;
 			Back)
 				break
@@ -775,7 +766,7 @@ get_channels_data() {
 		channels_data=$(cat "$CLI_CONFIG_DIR/subscriptions.json")
 	else
 		echo Loading subscriptions...
-		channels_data=$(yt-dlp "https://www.youtube.com/feed/channels" --flat-playlist "${PREFERRED_BROWSER[@]}" -J)
+		channels_data=$(yt-dlp "https://www.youtube.com/feed/channels" --flat-playlist $PREFERRED_BROWSER -J)
 		! [ "$FORCE_CHANNEL_THUMBNAILS_DOWNLOAD" = "0" ] && [ "$ENABLE_PREVIEW" = "true" ] && download_preview_images "$channels_data" "https:"
 		echo "$channels_data" >"$CLI_CONFIG_DIR/subscriptions.json"
 		clear
@@ -831,7 +822,7 @@ ${RED}󰈆${RESET}  Exit
 		playlist_results=$(run_yt_dlp "$url")
 		playlist_video_titles=$(echo "$playlist_results" | jq '.entries[].title' -r)
 		while true; do
-			playlist_title=$(echo -e "$playlist_video_titles\nBack" | launcher "Select Playlist")
+			playlist_title=$(printf "$playlist_video_titles\nBack" | launcher "Select Playlist")
 			[ "$playlist_title" = "Back" ] && break
 			playlist_title="$(echo "$playlist_title" | sed 's/"/\\"/g;s/ *$//g' | tr -d "\n")"
 			playlist="$(echo "$playlist_results" | jq ".entries|map(select(.title == \"$playlist_title\"))|.[0]")"
@@ -885,7 +876,7 @@ ${RED}󰈆${RESET}  Exit
 					playlist_results=$(run_yt_dlp "$playlist_url")
 					playlist_video_titles=$(echo "$playlist_results" | jq '.entries[].title' -r)
 					while true; do
-						playlist_title=$(echo -e "$playlist_video_titles\nBack" | launcher "Select Playlist")
+						playlist_title=$(printf "$playlist_video_titles\nBack" | launcher "Select Playlist")
 						[ "$playlist_title" = "Back" ] && break
 						playlist_title="$(echo "$playlist_title" | sed 's/"/\\"/g;s/ *$//g' | tr -d "\n")"
 						playlist="$(echo "$playlist_results" | jq ".entries|map(select(.title == \"$playlist_title\"))|.[0]")"
@@ -899,7 +890,7 @@ ${RED}󰈆${RESET}  Exit
 					playlist_results=$(run_yt_dlp "$playlist_url")
 					playlist_video_titles=$(echo "$playlist_results" | jq '.entries[].title' -r)
 					while true; do
-						playlist_title=$(echo -e "$playlist_video_titles\nBack" | launcher "Select Playlist")
+						playlist_title=$(printf "$playlist_video_titles\nBack" | launcher "Select Playlist")
 						[ "$playlist_title" = "Back" ] && break
 						playlist_title="$(echo "$playlist_title" | sed 's/"/\\"/g;s/ *$//g' | tr -d "\n")"
 						playlist="$(echo "$playlist_results" | jq ".entries|map(select(.title == \"$playlist_title\"))|.[0]")"
@@ -958,7 +949,7 @@ ${RED}󰈆${RESET}  Exit
 		playlist_explorer
 		;;
 	"Edit Config")
-		if command -v "$EDITOR" &>/dev/null; then
+		if command -v "$EDITOR" >/dev/null 2>&1; then
 			$EDITOR "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
 		else
 			open "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
