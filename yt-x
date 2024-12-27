@@ -503,7 +503,7 @@ core_dep_ch() {
 }
 trap byebye INT TERM
 PREVIEW_SCRIPT_FOR_VIDEOS="
-$fzf_preview
+  $fzf_preview
 
   title={}
   id=\$(echo -n {} | sed -E 's/^([0-9]+) .*/\1/g;s/^0//g')
@@ -515,11 +515,10 @@ $fzf_preview
 "
 PREVIEW_SCRIPT_FOR_CHANNELS="
   $fzf_preview
-  RED=$(tput setaf 1)
+
   MAGENTA='\x1b[38;2;215;0;95m'
-  CYAN=$(tput setaf 6)
-  BOLD=$(tput bold)
-  RESET=$(tput sgr0)
+  BOLD=\$(tput bold)
+  RESET=\$(tput sgr0)
 
   if ! [ -z {} ] && ! [ {} = \"Back\" ] && ! [ {} = \"Exit\" ] && ! [ {} = \"Main Menu\" ];then
     get_channels_data
@@ -564,7 +563,7 @@ PREVIEW_SCRIPT_FOR_CHANNELS="
   fi;
 "
 playlist_explorer() {
-	SHELL="bash"
+	SHELL="sh"
 	DOWNLOAD_IMAGES=0
 	while true; do
 		[ "$DOWNLOAD_IMAGES" = 0 ] &&
