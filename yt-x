@@ -192,15 +192,15 @@ check_update() {
 }
 
 # Adapted from the preview script in the fzf repo
+fzf_preview='
 fzf_preview() {
-
 	file=$1
 
 	dim=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}
 	if [ "$dim" = x ]; then
-		dim=$(stty size </dev/tty | awk '{print $2 "x" $1}')
+		dim=$(stty size </dev/tty | awk "{print \$2 \"x\" \$1}")
 	fi
-	if [ -z "$KITTY_WINDOW_ID" ] && [ "$((FZF_PREVIEW_TOP + FZF_PREVIEW_LINES))" -eq "$(stty size </dev/tty | awk '{print $1}')" ]; then
+	if [ -z "$KITTY_WINDOW_ID" ] && [ "$((FZF_PREVIEW_TOP + FZF_PREVIEW_LINES))" -eq "$(stty size </dev/tty | awk "{print \$1}")" ]; then
 		# Avoid scrolling issue when the Sixel image touches the bottom of the screen
 		# * https://github.com/junegunn/fzf/issues/2544
 		dim=${FZF_PREVIEW_COLUMNS}x$((FZF_PREVIEW_LINES - 1))
@@ -208,20 +208,20 @@ fzf_preview() {
 
 	# 1. Use kitty icat on kitty terminal
 	if [ -n "$KITTY_WINDOW_ID" ]; then
-		# 1. 'memory' is the fastest option but if you want the image to be scrollable,
-		#    you have to use 'stream'.
+		# 1. memory is the fastest option but if you want the image to be scrollable,
+		#    you have to use stream.
 		#
 		# 2. The last line of the output is the ANSI reset code without newline.
 		#    This confuses fzf and makes it render scroll offset indicator.
 		#    So we remove the last line and append the reset code to its previous line.
-		kitty icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="$dim@0x0" "$file" | sed '$d' | sed "$(printf '$s/$/\033[m/')"
+		kitty icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="$dim@0x0" "$file" | sed "\$d" | sed "$(printf "\$s/\$/\033[m/")"
 
 	# 2. Use chafa but prefer icat if available
 	elif [ -n "$GHOSTTY_BIN_DIR" ]; then
 		if command -v kitten >/dev/null 2>&1; then
-			kitten icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="$dim@0x0" "$file" | sed '$d' | sed "$(printf '$s/$/\033[m/')"
+			kitten icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="$dim@0x0" "$file" | sed "\$d" | sed "$(printf "\$s/\$/\033[m/")"
 		elif command -v icat >/dev/null 2>&1; then
-			icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="$dim@0x0" "$file" | sed '$d' | sed "$(printf '$s/$/\033[m/')"
+			icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="$dim@0x0" "$file" | sed "\$d" | sed "$(printf "\$s/\$/\033[m/")"
 		else
 			chafa -s "$dim" "$file"
 		fi
@@ -237,34 +237,15 @@ fzf_preview() {
 	elif command -v imgcat >/dev/null; then
 		# NOTE: We should use https://iterm2.com/utilities/it2check to check if the
 		# user is running iTerm2. But for the sake of simplicity, we just assume
-		# that's the case here.
+		# that`s the case here.
 		imgcat -W "${dim%%x*}" -H "${dim##*x}" "$file"
 
-		# 4. Use ueberzug image preview
-		# elif command -v ueberzug >/dev/null; then
-		# 	if [ -n "$(pgrep ueberzug)" ]; then
-		# 		killall ueberzug
-		# 	fi
-		#
-		# 	fifo="$(mktemp -u)"
-		# 	mkfifo "$fifo"
-		# 	{
-		# 		printf "%s\n" \
-		# 			'{"action":"add","identifier":"preview","max_height":'${dim##*x}',"max_width":'${dim%%x*}',"path":"'$file'","x":4,"y":3}'
-		# 		read <$fifo
-		# 	} | ueberzug layer &
-		# 	rm "$fifo"
-		#
-		# 	for line in $(seq $((${dim##*x} / 2))); do
-		# 		echo
-		# 	done
-		#
 		# 5. Cannot find any suitable method to preview the image
 	else
 		echo please install a terminal image viewer
 		echo either icat for kitty terminal and wezterm or imgcat or chafa
 	fi
-}
+}'
 
 confirm() {
 	if command -v "gum" >/dev/null 2>&1; then
@@ -411,6 +392,7 @@ generate_text_preview() {
 		fi
 
 		printf "
+
 if [ -f \"$CLI_PREVIEW_IMAGES_CACHE_DIR/${id}.jpg\" ];then fzf_preview \"$CLI_PREVIEW_IMAGES_CACHE_DIR/${id}.jpg\" 2>/dev/null;
 else echo loading preview image...;
 fi
@@ -521,17 +503,25 @@ core_dep_ch() {
 }
 trap byebye INT TERM
 PREVIEW_SCRIPT_FOR_VIDEOS="
+$fzf_preview
+
   title={}
   id=\$(echo -n {} | sed -E 's/^([0-9]+) .*/\1/g;s/^0//g')
   if  [ -f \"$CLI_PREVIEW_SCRIPTS_DIR/\${id}.txt\" ];then
-    source \"$CLI_PREVIEW_SCRIPTS_DIR/\${id}.txt\";
+    . \"$CLI_PREVIEW_SCRIPTS_DIR/\${id}.txt\";
   else
     echo Loading Preview...
   fi
 "
 PREVIEW_SCRIPT_FOR_CHANNELS="
+  $fzf_preview
+  RED=$(tput setaf 1)
+  MAGENTA='\x1b[38;2;215;0;95m'
+  CYAN=$(tput setaf 6)
+  BOLD=$(tput bold)
+  RESET=$(tput sgr0)
+
   if ! [ -z {} ] && ! [ {} = \"Back\" ] && ! [ {} = \"Exit\" ] && ! [ {} = \"Main Menu\" ];then
-    init_pretty_print;
     get_channels_data
 
     title=\"\$(echo {}|sed 's/\"/\\\\\\\"/g')\"
@@ -587,7 +577,6 @@ playlist_explorer() {
 		titles=$(echo "$search_results" | jq '.entries[].title' -r 2>/dev/null)
 		[ "$ENABLE_PREVIEW" = "true" ] && [ "$PREFERRED_SELECTOR" = "fzf" ] && [ "$DOWNLOAD_IMAGES" = 0 ] && download_preview_images "$search_results" "" && DOWNLOAD_IMAGES=1
 		export search_results SHELL
-		export -f init_pretty_print fzf_preview
 		if [ "$ENABLE_PREVIEW" = "true" ]; then
 			title="$(printf "%s\nNext\nPrevious\n${CYAN}󰌍${RESET}  Back\n${CYAN}󰍜${RESET}  Main Menu\n${RED}󰈆${RESET}  Exit" "$titles" | launcher_with_preview "select video" "$PREVIEW_SCRIPT_FOR_VIDEOS" | tr -d '\n' | sed 's/^[^0-9]  //g')"
 		else
@@ -854,7 +843,7 @@ ${RED}󰈆${RESET}  Exit
 			get_channels_data
 			channels=$(echo "$channels_data" | jq '.entries[].channel' -r)
 			export SHELL CLI_CONFIG_DIR
-			export -f init_pretty_print fzf_preview get_channels_data
+			export -f get_channels_data
 			channel_name=$(printf "%s\nMain Menu\nExit" "$channels" | launcher_with_preview "Select Channel" "$PREVIEW_SCRIPT_FOR_CHANNELS")
 			channel_name="$(echo "$channel_name" | sed 's/"/\\"/g;s/ *$//g' | tr -d "\n")"
 			[ "$channel_name" = "Exit" ] && byebye
