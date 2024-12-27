@@ -521,8 +521,7 @@ PREVIEW_SCRIPT_FOR_CHANNELS="
   RESET=\$(tput sgr0)
 
   if ! [ -z {} ] && ! [ {} = \"Back\" ] && ! [ {} = \"Exit\" ] && ! [ {} = \"Main Menu\" ];then
-    get_channels_data
-
+    channels_data=\$(cat \"\$CLI_CONFIG_DIR/subscriptions.json\")
     title=\"\$(echo {}|sed 's/\"/\\\\\\\"/g')\"
     video=\$(echo \"\$channels_data\" | jq -r \".entries | map(select(.title == \\\"\$title\\\" )) | .[0]\" 2>/dev/null)
 
@@ -894,7 +893,6 @@ ${RED}󰈆${RESET}  Exit
 			get_channels_data
 			channels=$(echo "$channels_data" | jq '.entries[].channel' -r)
 			export SHELL CLI_CONFIG_DIR
-			export -f get_channels_data
 			channel_name=$(printf "%s\nMain Menu\nExit" "$channels" | launcher_with_preview "Select Channel" "$PREVIEW_SCRIPT_FOR_CHANNELS")
 			channel_name="$(echo "$channel_name" | sed 's/"/\\"/g;s/ *$//g' | tr -d "\n")"
 			[ "$channel_name" = "Exit" ] && byebye
