@@ -241,24 +241,24 @@ fzf_preview() {
 		imgcat -W "${dim%%x*}" -H "${dim##*x}" "$file"
 
 		# 4. Use ueberzug image preview
-	elif command -v ueberzug >/dev/null; then
-		if [ -n "$(pgrep ueberzug)" ]; then
-			killall ueberzug
-		fi
-
-		fifo="$(mktemp -u)"
-		mkfifo "$fifo"
-		{
-			printf "%s\n" \
-				'{"action":"add","identifier":"preview","max_height":'${dim##*x}',"max_width":'${dim%%x*}',"path":"'$file'","x":4,"y":3}'
-			read <$fifo
-		} | ueberzug layer &
-		rm "$fifo"
-
-		for line in $(seq $((${dim##*x} / 2))); do
-			echo
-		done
-
+		# elif command -v ueberzug >/dev/null; then
+		# 	if [ -n "$(pgrep ueberzug)" ]; then
+		# 		killall ueberzug
+		# 	fi
+		#
+		# 	fifo="$(mktemp -u)"
+		# 	mkfifo "$fifo"
+		# 	{
+		# 		printf "%s\n" \
+		# 			'{"action":"add","identifier":"preview","max_height":'${dim##*x}',"max_width":'${dim%%x*}',"path":"'$file'","x":4,"y":3}'
+		# 		read <$fifo
+		# 	} | ueberzug layer &
+		# 	rm "$fifo"
+		#
+		# 	for line in $(seq $((${dim##*x} / 2))); do
+		# 		echo
+		# 	done
+		#
 		# 5. Cannot find any suitable method to preview the image
 	else
 		echo please install a terminal image viewer
