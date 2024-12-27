@@ -884,6 +884,7 @@ ${CYAN}󰩉${RESET}  Featured
 ${CYAN}${RESET}  Search
 ${CYAN}󰐑${RESET}  Playlists
 ${CYAN}${RESET}  Shorts
+${CYAN}󰠿${RESET}  Streams
 ${CYAN}󰌍${RESET}  Back
 ${RED}󰈆${RESET}  Exit
 " | launcher "Select Action" | sed 's/.  //g')"
@@ -894,6 +895,11 @@ ${RED}󰈆${RESET}  Exit
 				case "$channel_action" in
 				Videos)
 					url="$uploader_url_base/videos"
+					search_results=$(run_yt_dlp "$url")
+					playlist_explorer
+					;;
+				Streams)
+					url="$uploader_url_base/streams"
 					search_results=$(run_yt_dlp "$url")
 					playlist_explorer
 					;;
