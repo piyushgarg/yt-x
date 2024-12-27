@@ -139,7 +139,7 @@ Pr's are highly welcomed.
 - [x] Use a JSON file to store custom playlists in order to allow more features
 - [ ] Handle visit channel in browser option
 - [x] Update script option
-- [ ] Add ability to generate mixes based on a video
+- [x] Add ability to generate mixes based on a video
 - [ ] Add caching for faster load times when loading data with yt-dlp
 - [ ] implement pseudo subscriptions as explore channels
 - [x] explore playlists
@@ -163,10 +163,9 @@ Pr's are highly welcomed.
 **Documentation and refactor:**
 
 - [ ] Document all functionality
-- [ ] Remove all code in relation to lib-x which was used as a template for this project
 - [x] Save the image and preview scripts with the filename as the id of the video or channel.
-- [ ] Write completions for fish
-- [ ] Don't force sixel graphics when using chafa
+- [x] Write completions for fish
+- [x] Don't force sixel graphics when using chafa
 - [x] Remove unnecessary comments
 
 # Receiving Support
