@@ -885,6 +885,7 @@ ${CYAN}${RESET}  Search
 ${CYAN}󰐑${RESET}  Playlists
 ${CYAN}${RESET}  Shorts
 ${CYAN}󰠿${RESET}  Streams
+${CYAN}${RESET}  Podcasts
 ${CYAN}󰌍${RESET}  Back
 ${RED}󰈆${RESET}  Exit
 " | launcher "Select Action" | sed 's/.  //g')"
@@ -902,6 +903,10 @@ ${RED}󰈆${RESET}  Exit
 					url="$uploader_url_base/streams"
 					search_results=$(run_yt_dlp "$url")
 					playlist_explorer
+					;;
+				Podcasts)
+					url="$uploader_url_base/podcasts"
+					playlists_explorer
 					;;
 				Shorts)
 					url="$uploader_url_base/shorts"
