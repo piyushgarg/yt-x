@@ -142,15 +142,15 @@ Pr's are highly welcomed.
 - [ ] Add ability to generate mixes based on a video
 - [ ] Add caching for faster load times when loading data with yt-dlp
 - [ ] implement pseudo subscriptions as explore channels
-- [ ] explore playlists
+- [x] explore playlists
 - [ ] save current playlist
 - [ ] search and filter
-- [ ] work on playlist previews
+- [x] work on playlist previews
 - [ ] option to setup desktop notifications for a channel you want to get updates on new videos
 - [ ] previews in rofi mode
-- [ ] view shorts for a specific channel
-- [ ] view podcasts for a specific channel
-- [ ] consolidate playlist exploring code to one function
+- [x] view shorts for a specific channel
+- [x] view podcasts for a specific channel
+- [x] consolidate playlist exploring code to one function
 - [ ] consolidate channel exploring code to one function
 - [ ] make the code posix compliant
 
@@ -180,6 +180,7 @@ You can find me here incase you need any help setting it up or just want to hang
 </p>
 
 # supporting the project
+
 Give the project a star and consider directly contributing to the code.
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y8ZAA7N)
