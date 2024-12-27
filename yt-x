@@ -64,6 +64,9 @@ DISOWN_STREAMING_PROCESS: $DISOWN_STREAMING_PROCESS
 # whether to update the recent list kept locally [true/false]
 UPDATE_RECENT: $UPDATE_RECENT
 
+# whether to update the recent list kept locally [true/false]
+SEARCH_HISTORY: $SEARCH_HISTORY
+
 # the number of recent videos to keep
 NO_OF_RECENT: $NO_OF_RECENT
 
@@ -120,6 +123,9 @@ load_config() {
 
 	NOTIFICATION_DURATION="$(awk -F': ' '/^NOTIFICATION_DURATION:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	[ -z "$NOTIFICATION_DURATION" ] && NOTIFICATION_DURATION=5
+
+	SEARCH_HISTORY="$(awk -F': ' '/^SEARCH_HISTORY:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
+	[ -z "$SEARCH_HISTORY" ] && SEARCH_HISTORY="true"
 
 	DOWNLOAD_DIRECTORY="$(awk -F': ' '/^DOWNLOAD_DIRECTORY:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	[ -z "$DOWNLOAD_DIRECTORY" ] && DOWNLOAD_DIRECTORY="$HOME/Videos/$CLI_NAME"
@@ -846,6 +852,7 @@ ${CYAN}${RESET}  Watch History
 ${CYAN}${RESET}  Recent
 ${CYAN}${RESET}  Clips
 ${CYAN}${RESET}  Edit Config
+${CYAN}${RESET}  Miscellaneous
 ${RED}󰈆${RESET}  Exit
 " | launcher "Select Action" | sed 's/.*  //g')"
 	[ "$action" = "Exit" ] && byebye
@@ -864,8 +871,12 @@ ${RED}󰈆${RESET}  Exit
 		;;
 	Search)
 		clear
-		search_Term="$(prompt "Enter term to search for" | jq -Rr '@uri')"
-		url="https://www.youtube.com/results?search_query=$search_Term&sp=EgIQAQ%253D%253D"
+		search_term="$(prompt "Enter term to search for")"
+		[ "$SEARCH_HISTORY" = "true" ] && [ -s "$CLI_CACHE_DIR/search_history.txt" ] && history=$(grep --invert-match "^$search_term\$" "$CLI_CACHE_DIR/search_history.txt")
+		[ "$SEARCH_HISTORY" = "true" ] && [ -s "$CLI_CACHE_DIR/search_history.txt" ] && echo "$history" >$CLI_CACHE_DIR/search_history.txt
+		[ "$SEARCH_HISTORY" = "true" ] && echo "$search_term" >>"$CLI_CACHE_DIR/search_history.txt"
+		search_term=$(echo "$search_term" | jq -Rr '@uri')
+		url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAQ%253D%253D"
 		search_results=$(run_yt_dlp "$url")
 		playlist_explorer
 		;;
@@ -944,8 +955,8 @@ ${RED}󰈆${RESET}  Exit
 					;;
 				Search)
 					clear
-					search_Term="$(prompt "Enter term to search for" | jq -Rr '@uri')"
-					url="$uploader_url_base/search?query=$search_Term"
+					search_term="$(prompt "Enter term to search for" | jq -Rr '@uri')"
+					url="$uploader_url_base/search?query=$search_term"
 					search_results=$(run_yt_dlp "$url")
 					playlist_explorer
 					;;
@@ -997,6 +1008,48 @@ ${RED}󰈆${RESET}  Exit
 		else
 			open "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
 		fi
+		;;
+	Miscellaneous)
+		while true; do
+
+			action="$(printf "\
+${CYAN}󱘢${RESET}  Search History
+${CYAN}${RESET}  Edit Search History
+${RED}󰆴${RESET}  Clear Search History
+${RED}${RESET}  Back
+${RED}󰈆${RESET}  Exit
+" | launcher "Select Action" | sed 's/.*  //g')"
+			case "$action" in
+			Search\ History)
+				clear
+				! [ -s "$CLI_CACHE_DIR/search_history.txt" ] && echo "No search history or disabed" && sleep "$NOTIFICATION_DURATION" && main
+				search_term="$(tac "$CLI_CACHE_DIR/search_history.txt" | launcher "Search for" | jq -Rr '@uri')"
+				url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAQ%253D%253D"
+				search_results=$(run_yt_dlp "$url")
+				playlist_explorer
+				;;
+			Edit\ Search\ History)
+				if command -v "$EDITOR" >/dev/null 2>&1; then
+					$EDITOR "$CLI_CACHE_DIR/search_history.txt"
+				else
+					open "$CLI_CACHE_DIR/search_history.txt"
+				fi
+				;;
+			Clear\ Search\ History)
+				confirm "Are you sure you want to clear your search history ($CLI_CACHE_DIR/search_history.txt)" && rm "$CLI_CACHE_DIR/search_history.txt"
+				;;
+			Back)
+				break
+				;;
+			Exit)
+				byebye
+				;;
+			*)
+				echo invalid action
+				sleep "$NOTIFICATION_DURATION"
+				;;
+			esac
+		done
 		;;
 	Exit)
 		byebye
