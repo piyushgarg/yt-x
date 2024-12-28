@@ -494,10 +494,10 @@ prompt() {
 }
 run_yt_dlp() {
 	if command -v "gum" >/dev/null 2>&1; then
-		gum spin --show-output -- yt-dlp "$1" -J --flat-playlist --extractor-args youtubetab:approximate_date --playlist-start "$PLAYLIST_START" --playlist-end "$PLAYLIST_END" $PREFERRED_BROWSER
+		gum spin --show-output -- yt-dlp "$1" -J --flat-playlist --extractor-args youtubetab:approximate_date --playlist-start "$PLAYLIST_START" --playlist-end "$PLAYLIST_END" $PREFERRED_BROWSER || send_notification "Failed to fetch data : ("
 	else
 		echo "Loading..." >/dev/stderr
-		yt-dlp "$1" -J --flat-playlist --extractor-args youtubetab:approximate_date --playlist-start "$PLAYLIST_START" --playlist-end "$PLAYLIST_END" $PREFERRED_BROWSER
+		yt-dlp "$1" -J --flat-playlist --extractor-args youtubetab:approximate_date --playlist-start "$PLAYLIST_START" --playlist-end "$PLAYLIST_END" $PREFERRED_BROWSER || send_notification "Failed to fetch data : ("
 	fi
 }
 
@@ -615,69 +615,6 @@ PREVIEW_SCRIPT_FOR_CHANNELS_EXPLORER="
     echo Loading...;
   fi;
 "
-channels_explorer() {
-	while true; do
-		channel_action="$(printf "\
-${CYAN}${RESET}  Videos
-${CYAN}󰩉${RESET}  Featured
-${CYAN}${RESET}  Search
-${CYAN}󰐑${RESET}  Playlists
-${CYAN}${RESET}  Shorts
-${CYAN}󰠿${RESET}  Streams
-${CYAN}${RESET}  Podcasts
-${CYAN}󰌍${RESET}  Back
-${RED}󰈆${RESET}  Exit
-" | launcher "Select Action" | sed 's/.  //g')"
-		[ "$channel_action" = "Exit" ] && byebye
-		[ "$channel_action" = "Back" ] && break
-		uploader_url_base="$(echo "$channel" | jq '.uploader_url' -r)"
-
-		case "$channel_action" in
-		Videos)
-			url="$uploader_url_base/videos"
-			search_results=$(run_yt_dlp "$url")
-			playlist_explorer
-			;;
-		Streams)
-			url="$uploader_url_base/streams"
-			search_results=$(run_yt_dlp "$url")
-			playlist_explorer
-			;;
-		Podcasts)
-			url="$uploader_url_base/podcasts"
-			playlists_explorer
-			;;
-		Shorts)
-			url="$uploader_url_base/shorts"
-			search_results=$(run_yt_dlp "$url")
-			playlist_explorer
-			;;
-		Featured)
-			url="$uploader_url_base/featured"
-			playlists_explorer
-			;;
-		Playlists)
-			url="$uploader_url_base/playlists"
-			playlists_explorer
-			;;
-		Search)
-			clear
-			search_term="$(prompt "Enter term to search for" | jq -Rr '@uri')"
-			url="$uploader_url_base/search?query=$search_term"
-			search_results=$(run_yt_dlp "$url")
-			playlist_explorer
-			;;
-		Exit)
-			byebye
-			;;
-		*)
-			echo invalid channel action
-			sleep "$NOTIFICATION_DURATION"
-			;;
-		esac
-	done
-
-}
 playlist_explorer() {
 	SHELL="sh"
 	DOWNLOAD_IMAGES=0
@@ -1004,6 +941,69 @@ playlists_explorer() {
 		search_results=$(run_yt_dlp "$url")
 		playlist_explorer
 	done
+}
+channels_explorer() {
+	while true; do
+		channel_action="$(printf "\
+${CYAN}${RESET}  Videos
+${CYAN}󰩉${RESET}  Featured
+${CYAN}${RESET}  Search
+${CYAN}󰐑${RESET}  Playlists
+${CYAN}${RESET}  Shorts
+${CYAN}󰠿${RESET}  Streams
+${CYAN}${RESET}  Podcasts
+${CYAN}󰌍${RESET}  Back
+${RED}󰈆${RESET}  Exit
+" | launcher "Select Action" | sed 's/.  //g')"
+		[ "$channel_action" = "Exit" ] && byebye
+		[ "$channel_action" = "Back" ] && break
+		uploader_url_base="$(echo "$channel" | jq '.uploader_url' -r)"
+
+		case "$channel_action" in
+		Videos)
+			url="$uploader_url_base/videos"
+			search_results=$(run_yt_dlp "$url")
+			playlist_explorer
+			;;
+		Streams)
+			url="$uploader_url_base/streams"
+			search_results=$(run_yt_dlp "$url")
+			playlist_explorer
+			;;
+		Podcasts)
+			url="$uploader_url_base/podcasts"
+			playlists_explorer
+			;;
+		Shorts)
+			url="$uploader_url_base/shorts"
+			search_results=$(run_yt_dlp "$url")
+			playlist_explorer
+			;;
+		Featured)
+			url="$uploader_url_base/featured"
+			playlists_explorer
+			;;
+		Playlists)
+			url="$uploader_url_base/playlists"
+			playlists_explorer
+			;;
+		Search)
+			clear
+			search_term="$(prompt "Enter term to search for" | jq -Rr '@uri')"
+			url="$uploader_url_base/search?query=$search_term"
+			search_results=$(run_yt_dlp "$url")
+			playlist_explorer
+			;;
+		Exit)
+			byebye
+			;;
+		*)
+			echo invalid channel action
+			sleep "$NOTIFICATION_DURATION"
+			;;
+		esac
+	done
+
 }
 main() {
 	SHELL="sh"
