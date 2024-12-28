@@ -150,7 +150,7 @@ load_config() {
 	export FZF_DEFAULT_OPTS PRETTY_PRINT PLATFORM
 }
 send_notification() {
-	echo "$1" && sleep "$NOTIFICATION_DURATION"
+	echo "$1" >&2 && sleep "$NOTIFICATION_DURATION"
 }
 update_script() {
 	yt_x_path="$(command -v yt-x)"
@@ -739,6 +739,7 @@ ${CYAN}${RESET}  Listen To All
 ${CYAN}${RESET}  Mix
 ${CYAN}${RESET}  Save
 ${CYAN}󰧎${RESET}  UnSave
+${CYAN}󰐒${RESET}  Save Playlist
 ${CYAN}󰵀${RESET}  Subscribe To Channel
 ${CYAN}󱑤${RESET}  Download
 ${CYAN}󰦗${RESET}  Download All
@@ -886,7 +887,21 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				[ -s "$CLI_CONFIG_DIR/saved_videos.json" ] && current_liked_videos=$(cat "$CLI_CONFIG_DIR/saved_videos.json")
 				id=$(echo "$video" | jq '.id' -r)
 				echo "$current_liked_videos" | jq "{\"entries\":[.entries[] | select(.id != \"$id\")]}|.entries+=[$(echo "$video" | jq '.title |= sub("^[0-9]+ "; "")')]" >"$CLI_CONFIG_DIR/saved_videos.json"
-
+				;;
+			Save\ Playlist)
+				# For now a pseudo like feature is just as useful
+				custom_playlists="[]"
+				[ -s "$CLI_CONFIG_DIR/custom_playlists.json" ] && custom_playlists=$(cat "$CLI_CONFIG_DIR/custom_playlists.json")
+				playlist_name=$(prompt "Enter the name of the playlist")
+				playlist_id=$(echo "$url" | sed 's/.*list=//g')
+				custom_playlist="
+          {
+            \"name\": \"$playlist_name\",
+            \"playlistUrl\": \"https://www.youtube.com/playlist?list=$playlist_id\",
+            \"playlistWatchUrl\": \"https://www.youtube.com/watch?list=$playlist_id\"
+          }
+        "
+				echo "$custom_playlists" | jq ".+=[$custom_playlist]" >"$CLI_CONFIG_DIR/custom_playlists.json" && send_notification "successfully added to custom playlists" || send_notification "Failed to add to custom playlists"
 				;;
 			UnSave)
 				current_liked_videos='{"entries":[]}'
@@ -933,6 +948,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 			clear
 		done
 	done
+	unset urlForAll
 }
 get_channels_data() {
 	[ "$FORCE_CHANNEL_THUMBNAILS_DOWNLOAD" = "0" ] && download_preview_images "$channels_data" "https:"
