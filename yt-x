@@ -803,7 +803,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 					mpv $(yt-dlp "https://www.youtube.com/watch?v=${video_id}&list=RD$video_id" --flat-playlist -J | jq '.entries[].url' -r) --no-video
 				else
 					if ! [ "$PLAYER" = mpv ] || [ "$PLATFORM" = android ]; then
-						video_url=$(yt-dlp "$video_url" -q --no-warnings --get-url --format "best[height<=$VIDEO_QUALITY]/best" 2>/dev/null | tail -n 1)
+						video_url=$(yt-dlp "$video_url" -q --no-warnings --get-url --format "bestaudio/best[height<=$VIDEO_QUALITY]/best" 2>/dev/null | tail -n 1)
 						if ! [ "$?" = 0 ] || [ -z "$video_url" ]; then
 							echo No video format found
 							sleep 5
