@@ -1301,6 +1301,11 @@ while [ $# -gt 0 ]; do
 		ROFI_THEME="$2"
 		shift
 		;;
+	--player)
+		[ -n "$2" ] || usage 1
+		PLAYER="$2"
+		shift
+		;;
 	-E | --generate-desktop-entry)
 		echo "
 [Desktop Entry]
