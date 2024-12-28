@@ -1175,6 +1175,7 @@ ${CYAN}󰵀${RESET}  Explore Channels
 ${CYAN}󰐑${RESET}  Explore Playlists
 ${CYAN}󱘢${RESET}  Search History
 ${CYAN}${RESET}  Edit Search History
+${CYAN}󰤀${RESET}  Edit Custom Playlists
 ${RED}󰆴${RESET}  Clear Search History
 ${RED}${RESET}  Back
 ${RED}󰈆${RESET}  Exit
@@ -1218,6 +1219,13 @@ ${RED}󰈆${RESET}  Exit
 					$EDITOR "$CLI_CACHE_DIR/search_history.txt"
 				else
 					open "$CLI_CACHE_DIR/search_history.txt"
+				fi
+				;;
+			Edit\ Custom\ Playlists)
+				if command -v "$EDITOR" >/dev/null 2>&1; then
+					$EDITOR "$CLI_CONFIG_DIR/custom_playlists.json"
+				else
+					open "$CLI_CONFIG_DIR/custom_playlists.json"
 				fi
 				;;
 			Clear\ Search\ History)
