@@ -981,6 +981,7 @@ ${CYAN}󰐑${RESET}  Playlists
 ${CYAN}${RESET}  Shorts
 ${CYAN}󰠿${RESET}  Streams
 ${CYAN}${RESET}  Podcasts
+${CYAN}󰵀${RESET}  Subscribe
 ${CYAN}󰌍${RESET}  Back
 ${RED}󰈆${RESET}  Exit
 " | launcher "Select Action" | sed 's/.  //g')"
@@ -1023,6 +1024,22 @@ ${RED}󰈆${RESET}  Exit
 			search_results=$(run_yt_dlp "$url")
 			playlist_explorer
 			;;
+		Subscribe)
+			if ! [ -s "$CLI_CONFIG_DIR/subscriptions.json" ]; then
+				if confirm "Would you like to import your youtube subscriptions first; you wont be able to do so again unless you delete the subscribtiofile"; then
+					_channels_data=$(yt-dlp "https://www.youtube.com/feed/channels" --flat-playlist $PREFERRED_BROWSER -J)
+					echo "$_channels_data" >"$CLI_CONFIG_DIR/subscriptions.json"
+				else
+
+					_channels_data='{"entries":[]}'
+				fi
+			else
+				_channels_data=$(cat "$CLI_CONFIG_DIR/subscriptions.json")
+			fi
+
+			id=$(echo "$channel" | jq '.id' -r)
+			echo "$_channels_data" | jq "{\"entries\":[.entries[] | select(.id != \"$id\")]}|.entries+=[$channel]" >"$CLI_CONFIG_DIR/subscriptions.json" && send_notification "successfully subscribed" || send_notification "Failed to subscribe to channel"
+			;;
 		Exit)
 			byebye
 			;;
@@ -1031,6 +1048,7 @@ ${RED}󰈆${RESET}  Exit
 			sleep "$NOTIFICATION_DURATION"
 			;;
 		esac
+		clear
 	done
 
 }
@@ -1155,7 +1173,6 @@ ${RED}󰈆${RESET}  Exit
 			action="$(printf "\
 ${CYAN}󰵀${RESET}  Explore Channels
 ${CYAN}󰐑${RESET}  Explore Playlists
-${CYAN}${RESET}  Subscribe to Channel
 ${CYAN}󱘢${RESET}  Search History
 ${CYAN}${RESET}  Edit Search History
 ${RED}󰆴${RESET}  Clear Search History
@@ -1163,20 +1180,6 @@ ${RED}${RESET}  Back
 ${RED}󰈆${RESET}  Exit
 " | launcher "Select Action" | sed 's/.*  //g')"
 			case "$action" in
-			Subscribe\ to\ Channel)
-				clear
-				search_term=$(prompt "What channel would you like to subscribe to")
-				url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAg%253D%253D"
-				channels_data=$(run_yt_dlp "$url")
-				download_preview_images "$channels_data" "https:"
-				channels=$(echo "$channels_data" | jq '.entries[].channel' -r)
-				export channels_data
-				channel_name=$(printf "%s\nMain Menu\nExit" "$channels" | launcher_with_preview "Select Channel" "$PREVIEW_SCRIPT_FOR_CHANNELS_EXPLORER")
-				channel_name="$(echo "$channel_name" | sed 's/"/\\"/g;s/ *$//g' | tr -d "\n")"
-				channel="$(echo "$channels_data" | jq ".entries|map(select(.channel == \"$channel_name\"))|.[0]")"
-				send_notification "Work in progress : )"
-				send_notification "For now use explore channels"
-				;;
 			Explore\ Channels)
 				unset search_term
 				while true; do
@@ -1190,9 +1193,9 @@ ${RED}󰈆${RESET}  Exit
 					[ "$channel_name" = "Exit" ] && byebye
 					[ "$channel_name" = "Back" ] && break
 					channel="$(echo "$channels_data" | jq ".entries|map(select(.channel == \"$channel_name\"))|.[0]")"
-					channel="$(echo "$channels_data" | jq ".entries|map(select(.channel == \"$channel_name\"))|.[0]")"
 					channels_explorer
 				done
+				unset channels_data
 				;;
 			Explore\ Playlists)
 				clear
