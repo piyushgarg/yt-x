@@ -141,17 +141,17 @@ Pr's are highly welcomed.
 - [x] Update script option
 - [x] Add ability to generate mixes based on a video
 - [ ] Add caching for faster load times when loading data with yt-dlp
-- [ ] implement pseudo subscriptions as explore channels
+- [x] implement pseudo subscriptions as explore channels
 - [x] explore playlists
 - [ ] save current playlist
-- [ ] search and filter
+- [ ] filter search
 - [x] work on playlist previews
 - [ ] option to setup desktop notifications for a channel you want to get updates on new videos
 - [ ] previews in rofi mode
 - [x] view shorts for a specific channel
 - [x] view podcasts for a specific channel
 - [x] consolidate playlist exploring code to one function
-- [ ] consolidate channel exploring code to one function
+- [x] consolidate channel exploring code to one function
 - [x] make the code posix compliant
 
 **Fix:**
