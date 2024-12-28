@@ -429,7 +429,6 @@ echo
 }
 
 download_preview_images() {
-	[ -z "$search_results" ] && return 1
 	echo generating preview in the background...
 	generate_text_preview "$1" &
 
@@ -567,6 +566,118 @@ PREVIEW_SCRIPT_FOR_CHANNELS="
     echo Loading...;
   fi;
 "
+
+PREVIEW_SCRIPT_FOR_CHANNELS_EXPLORER="
+  $fzf_preview
+
+  MAGENTA='\x1b[38;2;215;0;95m'
+  BOLD=\$(tput bold)
+  RESET=\$(tput sgr0)
+
+  if ! [ -z {} ] && ! [ {} = \"Back\" ] && ! [ {} = \"Exit\" ] && ! [ {} = \"Main Menu\" ];then
+    # channels_data=\$(cat \"\$CLI_CONFIG_DIR/subscriptions.json\")
+    title=\"\$(echo {}|sed 's/\"/\\\\\\\"/g')\"
+    video=\$(echo \"\$channels_data\" | jq -r \".entries | map(select(.title == \\\"\$title\\\" )) | .[0]\" 2>/dev/null)
+
+    id=\$(echo \$video | jq '.id' -r);
+
+    channel=\$(echo \"\$video\"| jq '.channel' -r);
+
+    channel_follower_count=\$(echo \"\$video\"| jq -r '
+    .channel_follower_count
+    |tostring
+    |split(\"\")
+    |reverse
+    |join(\"\")
+    |gsub(\"(?<thousands>[0-9]\\{3})(?=[0-9])\"; \"\\(.thousands),\")
+    |split(\"\")
+    |reverse
+    |join(\"\")
+    '
+    );
+    
+    description=\$(echo \"\$video\"| jq '.description' -r);
+    
+    if [ -f \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" ];then fzf_preview \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" 2>/dev/null;
+    else echo loading preview image...;
+    fi
+
+    ll=1
+    while [ \$ll -le \$FZF_PREVIEW_COLUMNS ];do echo -n -e \"─\" ;(( ll++ ));done;
+    # printf \"\${MAGENTA}\${BOLD}Id: \${RESET}\$id\n\";
+    printf \"\${MAGENTA}\${BOLD}Channel: \${RESET}\$channel\n\";
+    printf \"\${MAGENTA}\${BOLD}Follower Count: \${RESET}\$channel_follower_count followers\n\";
+
+    ll=1
+    while [ \$ll -le \$FZF_PREVIEW_COLUMNS ];do echo -n -e \"─\" ;(( ll++ ));done;
+    ! [ \"\$description\" = \"null\" ] && echo -e \"\$description\";
+  else
+    echo Loading...;
+  fi;
+"
+channels_explorer() {
+	while true; do
+		channel_action="$(printf "\
+${CYAN}${RESET}  Videos
+${CYAN}󰩉${RESET}  Featured
+${CYAN}${RESET}  Search
+${CYAN}󰐑${RESET}  Playlists
+${CYAN}${RESET}  Shorts
+${CYAN}󰠿${RESET}  Streams
+${CYAN}${RESET}  Podcasts
+${CYAN}󰌍${RESET}  Back
+${RED}󰈆${RESET}  Exit
+" | launcher "Select Action" | sed 's/.  //g')"
+		[ "$channel_action" = "Exit" ] && byebye
+		[ "$channel_action" = "Back" ] && break
+		uploader_url_base="$(echo "$channel" | jq '.uploader_url' -r)"
+
+		case "$channel_action" in
+		Videos)
+			url="$uploader_url_base/videos"
+			search_results=$(run_yt_dlp "$url")
+			playlist_explorer
+			;;
+		Streams)
+			url="$uploader_url_base/streams"
+			search_results=$(run_yt_dlp "$url")
+			playlist_explorer
+			;;
+		Podcasts)
+			url="$uploader_url_base/podcasts"
+			playlists_explorer
+			;;
+		Shorts)
+			url="$uploader_url_base/shorts"
+			search_results=$(run_yt_dlp "$url")
+			playlist_explorer
+			;;
+		Featured)
+			url="$uploader_url_base/featured"
+			playlists_explorer
+			;;
+		Playlists)
+			url="$uploader_url_base/playlists"
+			playlists_explorer
+			;;
+		Search)
+			clear
+			search_term="$(prompt "Enter term to search for" | jq -Rr '@uri')"
+			url="$uploader_url_base/search?query=$search_term"
+			search_results=$(run_yt_dlp "$url")
+			playlist_explorer
+			;;
+		Exit)
+			byebye
+			;;
+		*)
+			echo invalid channel action
+			sleep "$NOTIFICATION_DURATION"
+			;;
+		esac
+	done
+
+}
 playlist_explorer() {
 	SHELL="sh"
 	DOWNLOAD_IMAGES=0
@@ -794,10 +905,10 @@ get_channels_data() {
 playlists_explorer() {
 	playlist_results=$(
 		if command -v "gum" >/dev/null 2>&1; then
-			gum spin --show-output -- yt-dlp "$url" -J --flat-playlist --extractor-args youtubetab:approximate_date $PREFERRED_BROWSER
+			gum spin --show-output -- yt-dlp "$url" -J --flat-playlist --extractor-args youtubetab:approximate_date $PREFERRED_BROWSER $PLAYLISTS_EXTRA_ARGS
 		else
 			echo "Loading..." >/dev/stderr
-			yt-dlp "$url" -J --flat-playlist --extractor-args youtubetab:approximate_date $PREFERRED_BROWSER
+			yt-dlp "$url" -J --flat-playlist --extractor-args youtubetab:approximate_date $PREFERRED_BROWSER $PLAYLISTS_EXTRA_ARGS
 		fi
 	)
 	playlist_results=$(echo "$playlist_results" | jq "
@@ -909,66 +1020,7 @@ ${RED}󰈆${RESET}  Exit
 			[ "$channel_name" = "Exit" ] && byebye
 			[ "$channel_name" = "Main Menu" ] && break
 			channel="$(echo "$channels_data" | jq ".entries|map(select(.channel == \"$channel_name\"))|.[0]")"
-			while true; do
-				channel_action="$(printf "\
-${CYAN}${RESET}  Videos
-${CYAN}󰩉${RESET}  Featured
-${CYAN}${RESET}  Search
-${CYAN}󰐑${RESET}  Playlists
-${CYAN}${RESET}  Shorts
-${CYAN}󰠿${RESET}  Streams
-${CYAN}${RESET}  Podcasts
-${CYAN}󰌍${RESET}  Back
-${RED}󰈆${RESET}  Exit
-" | launcher "Select Action" | sed 's/.  //g')"
-				[ "$channel_action" = "Exit" ] && byebye
-				[ "$channel_action" = "Back" ] && break
-				uploader_url_base="$(echo "$channel" | jq '.uploader_url' -r)"
-
-				case "$channel_action" in
-				Videos)
-					url="$uploader_url_base/videos"
-					search_results=$(run_yt_dlp "$url")
-					playlist_explorer
-					;;
-				Streams)
-					url="$uploader_url_base/streams"
-					search_results=$(run_yt_dlp "$url")
-					playlist_explorer
-					;;
-				Podcasts)
-					url="$uploader_url_base/podcasts"
-					playlists_explorer
-					;;
-				Shorts)
-					url="$uploader_url_base/shorts"
-					search_results=$(run_yt_dlp "$url")
-					playlist_explorer
-					;;
-				Featured)
-					url="$uploader_url_base/featured"
-					playlists_explorer
-					;;
-				Playlists)
-					url="$uploader_url_base/playlists"
-					playlists_explorer
-					;;
-				Search)
-					clear
-					search_term="$(prompt "Enter term to search for" | jq -Rr '@uri')"
-					url="$uploader_url_base/search?query=$search_term"
-					search_results=$(run_yt_dlp "$url")
-					playlist_explorer
-					;;
-				Exit)
-					byebye
-					;;
-				*)
-					echo invalid channel action
-					sleep "$NOTIFICATION_DURATION"
-					;;
-				esac
-			done
+			channels_explorer
 		done
 		;;
 	Custom)
@@ -1011,8 +1063,10 @@ ${RED}󰈆${RESET}  Exit
 		;;
 	Miscellaneous)
 		while true; do
-
 			action="$(printf "\
+${CYAN}󰵀${RESET}  Explore Channels
+${CYAN}󰐑${RESET}  Explore Playlists
+${CYAN}${RESET}  Subscribe to Channel
 ${CYAN}󱘢${RESET}  Search History
 ${CYAN}${RESET}  Edit Search History
 ${RED}󰆴${RESET}  Clear Search History
@@ -1020,6 +1074,45 @@ ${RED}${RESET}  Back
 ${RED}󰈆${RESET}  Exit
 " | launcher "Select Action" | sed 's/.*  //g')"
 			case "$action" in
+			Subscribe\ to\ Channel)
+				clear
+				search_term=$(prompt "What channel would you like to subscribe to")
+				url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAg%253D%253D"
+				channels_data=$(run_yt_dlp "$url")
+				download_preview_images "$channels_data" "https:"
+				channels=$(echo "$channels_data" | jq '.entries[].channel' -r)
+				export channels_data
+				channel_name=$(printf "%s\nMain Menu\nExit" "$channels" | launcher_with_preview "Select Channel" "$PREVIEW_SCRIPT_FOR_CHANNELS_EXPLORER")
+				channel_name="$(echo "$channel_name" | sed 's/"/\\"/g;s/ *$//g' | tr -d "\n")"
+				channel="$(echo "$channels_data" | jq ".entries|map(select(.channel == \"$channel_name\"))|.[0]")"
+				send_notification "Work in progress : )"
+				send_notification "For now use explore channels"
+				;;
+			Explore\ Channels)
+				unset search_term
+				while true; do
+					clear
+					[ -z "$search_term" ] && search_term=$(prompt "What channel would you like to subscribe to") && url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAg%253D%253D" && channels_data=$(run_yt_dlp "$url") && download_preview_images "$channels_data" "https:"
+					clear
+					channels=$(echo "$channels_data" | jq '.entries[].channel' -r)
+					export channels_data SHELL
+					channel_name=$(printf "%s\nBack\nExit" "$channels" | launcher_with_preview "Select Channel" "$PREVIEW_SCRIPT_FOR_CHANNELS_EXPLORER")
+					channel_name="$(echo "$channel_name" | sed 's/"/\\"/g;s/ *$//g' | tr -d "\n")"
+					[ "$channel_name" = "Exit" ] && byebye
+					[ "$channel_name" = "Back" ] && break
+					channel="$(echo "$channels_data" | jq ".entries|map(select(.channel == \"$channel_name\"))|.[0]")"
+					channel="$(echo "$channels_data" | jq ".entries|map(select(.channel == \"$channel_name\"))|.[0]")"
+					channels_explorer
+				done
+				;;
+			Explore\ Playlists)
+				clear
+				search_term=$(prompt "What channel would you like to subscribe to")
+				url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAw%253D%253D"
+				PLAYLISTS_EXTRA_ARGS="--playlist-start 1 --playlist-end $NO_OF_SEARCH_RESULTS"
+				playlists_explorer
+				unset PLAYLISTS_EXTRA_ARGS
+				;;
 			Search\ History)
 				clear
 				! [ -s "$CLI_CACHE_DIR/search_history.txt" ] && echo "No search history or disabed" && sleep "$NOTIFICATION_DURATION" && main
@@ -1120,7 +1213,7 @@ while [ $# -gt 0 ]; do
 		usage 0
 		;;
 	-v | --version)
-		echo "$CLI_NAME $CLI_VERSION Copyright © 2024 $CLI_AUTHOR projects"
+		echo "$CLI_NAME v$CLI_VERSION Copyright © 2024 $CLI_AUTHOR projects"
 		exit 0
 		;;
 	-e | --edit-config)
