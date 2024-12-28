@@ -765,10 +765,18 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				fi
 				;;
 			"Listen To All")
-				if [ -n "$urlForAll" ]; then
-					mpv "$urlForAll" --no-video
+				if echo "$url" | grep -q "list=RD" || echo "$urlForAll" | grep -q "list=RD" || [ "$(echo "$search_results" | jq 'has("uploader_url") | not')" = "true" ]; then
+					if [ -n "$urlForAll" ]; then
+						mpv $(yt-dlp "$urlForAll" --flat-playlist -J | jq '.entries[].url' -r) --no-video
+					else
+						mpv $(yt-dlp "$url" --flat-playlist -J | jq '.entries[].url' -r) --no-video
+					fi
 				else
-					mpv "$url" --no-video
+					if [ -n "$urlForAll" ]; then
+						mpv "$urlForAll" --no-video
+					else
+						mpv "$url" --no-video
+					fi
 				fi
 				;;
 			"Download All")
@@ -786,8 +794,42 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				fi
 				;;
 			Listen)
+				printf "${MAGENTA}Now Listening to:${RESET} $title\n"
 				video_url=$(echo "$video" | jq '.url' -r)
-				mpv "$video_url" --no-video
+				if echo "$video_url" | grep -q "list=RD"; then
+					video_id=$(echo "$video" | jq '.id' -r | sed 's/RD//g')
+					mpv $(yt-dlp "https://www.youtube.com/watch?v=${video_id}&list=RD$video_id" --flat-playlist -J | jq '.entries[].url' -r) --no-video
+				else
+					if ! [ "$PLAYER" = mpv ] || [ "$PLATFORM" = android ]; then
+						video_url=$(yt-dlp "$video_url" -q --no-warnings --get-url --format "best[height<=$VIDEO_QUALITY]/best" 2>/dev/null | tail -n 1)
+						if ! [ "$?" = 0 ] || [ -z "$video_url" ]; then
+							echo No video format found
+							sleep 5
+							break
+						fi
+					fi
+					case "$PLATFORM" in
+					android)
+						case "$PLAYER" in
+						mpv) nohup am start --user 0 -a android.intent.action.VIEW -d "$video_url" -n is.xyz.mpv/.MPVActivity >/dev/null 2>&1 & ;;
+						vlc) nohup am start --user 0 -a android.intent.action.VIEW -d "$video_url" -n org.videolan.vlc/org.videolan.vlc.gui.video.VideoPlayerActivity -e "title" "$title" >/dev/null 2>&1 & ;;
+						esac
+						;;
+					*)
+						case "$PLAYER" in
+						mpv)
+							mpv "$video_url" --no-video
+							;;
+						vlc) vlc "$video_url" --video-title "$title" ;;
+						esac
+						;;
+					esac
+
+					current_recent_videos='{"entries":[]}'
+					[ -s "$CLI_CONFIG_DIR/recent.json" ] && current_recent_videos=$(cat "$CLI_CONFIG_DIR/recent.json")
+					id=$(echo "$video" | jq '.id' -r)
+					echo "$current_recent_videos" | jq "{\"entries\":[.entries[] | select(.id != \"$id\")]}|.entries+=[$(echo "$video" | jq '.title |= sub("^[0-9]+ "; "")')]" | jq "{\"entries\":.entries[-$NO_OF_RECENT:]}" >"$CLI_CONFIG_DIR/recent.json"
+				fi
 				;;
 			Mix)
 				video_id=$(echo "$video" | jq '.id' -r)
@@ -823,8 +865,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 					*)
 						case "$PLAYER" in
 						mpv)
-							mpv "$video_url" --no-terminal &
-							sleep "$NOTIFICATION_DURATION"
+							mpv "$video_url"
 							;;
 						vlc) vlc "$video_url" --video-title "$title" ;;
 						esac
@@ -887,6 +928,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				sleep "$NOTIFICATION_DURATION"
 				;;
 			esac
+			clear
 		done
 	done
 }
