@@ -143,7 +143,7 @@ Pr's are highly welcomed.
 - [ ] Add caching for faster load times when loading data with yt-dlp
 - [x] implement pseudo subscriptions as explore channels
 - [x] explore playlists
-- [ ] save current playlist
+- [x] save current playlist
 - [ ] filter search
 - [x] work on playlist previews
 - [ ] option to setup desktop notifications for a channel you want to get updates on new videos
@@ -166,7 +166,6 @@ Pr's are highly welcomed.
 - [x] Save the image and preview scripts with the filename as the id of the video or channel.
 - [x] Write completions for fish
 - [x] Don't force sixel graphics when using chafa
-- [x] Remove unnecessary comments
 
 # Receiving Support
 
