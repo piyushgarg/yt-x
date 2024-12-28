@@ -780,17 +780,19 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				fi
 				;;
 			"Download All")
+				playlist_name=$(prompt "Name of the playlist")
 				if [ -n "$urlForAll" ]; then
-					yt-dlp "$urlForAll" --output "$DOWNLOAD_DIRECTORY/videos/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+					yt-dlp "$urlForAll" --output "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				else
-					yt-dlp "$url" --output "$DOWNLOAD_DIRECTORY/videos/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+					yt-dlp "$url" --output "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				fi
 				;;
 			"Download All (Audio Only)")
+				playlist_name=$(prompt "Name of the playlist")
 				if [ -n "$urlForAll" ]; then
-					yt-dlp "$urlForAll" -x --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+					yt-dlp "$urlForAll" -x -f 'bestaudio/best' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/$playlist_name/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				else
-					yt-dlp "$url" -x --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+					yt-dlp "$url" -x -f 'bestaudio/best' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/$playlist_name/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				fi
 				;;
 			Listen)
@@ -907,11 +909,11 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				;;
 			Download)
 				video_url=$(echo "$video" | jq '.url' -r)
-				yt-dlp "$video_url" --output "$DOWNLOAD_DIRECTORY/videos/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+				yt-dlp "$video_url" --output "$DOWNLOAD_DIRECTORY/videos/individual/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				;;
 			"Download (Audio Only)")
 				video_url=$(echo "$video" | jq '.url' -r)
-				yt-dlp "$video_url" -x --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+				yt-dlp "$video_url" -x -f 'bestaudio' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/individual/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				;;
 			Back)
 				break
