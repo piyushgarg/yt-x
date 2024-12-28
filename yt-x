@@ -615,6 +615,36 @@ PREVIEW_SCRIPT_FOR_CHANNELS_EXPLORER="
     echo Loading...;
   fi;
 "
+PREVIEW_SCRIPT_FOR_PLAYLISTS_EXPLORER="
+  $fzf_preview
+
+  MAGENTA='\x1b[38;2;215;0;95m'
+  BOLD=\$(tput bold)
+  RESET=\$(tput sgr0)
+
+  if ! [ -z {} ] && ! [ {} = \"Back\" ] && ! [ {} = \"Exit\" ] && ! [ {} = \"Main Menu\" ];then
+    # channels_data=\$(cat \"\$CLI_CONFIG_DIR/subscriptions.json\")
+    title=\"\$(echo {}|sed 's/\"/\\\\\\\"/g')\"
+    video=\$(echo \"\$playlist_results\" | jq -r \".entries | map(select(.title == \\\"\$title\\\" )) | .[0]\" 2>/dev/null)
+    title=\"\$(echo \"\$title\"|sed 's/^.. //g')\"
+
+    id=\$(echo \$video | jq '.id' -r);
+
+    
+    if [ -f \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" ];then fzf_preview \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" 2>/dev/null;
+    else echo loading preview image...;
+    fi
+
+    ll=1
+    while [ \$ll -le \$FZF_PREVIEW_COLUMNS ];do echo -n -e \"─\" ;(( ll++ ));done;
+      echo \"\$title\";
+    ll=1
+    while [ \$ll -le \$FZF_PREVIEW_COLUMNS ];do echo -n -e \"─\" ;(( ll++ ));done;
+  else
+    echo Loading...;
+  fi;
+"
+
 playlist_explorer() {
 	SHELL="sh"
 	DOWNLOAD_IMAGES=0
@@ -915,13 +945,12 @@ playlists_explorer() {
           |map(.value))
           ")
 	playlist_video_titles=$(echo "$playlist_results" | jq '.entries[].title' -r 2>/dev/null)
-	search_results=$playlist_results
-	[ "$ENABLE_PREVIEW" = "true" ] && [ "$PREFERRED_SELECTOR" = "fzf" ] && download_preview_images "$search_results" ""
-	export search_results SHELL
+	[ "$ENABLE_PREVIEW" = "true" ] && [ "$PREFERRED_SELECTOR" = "fzf" ] && download_preview_images "$playlist_results" ""
+	export playlist_results SHELL
 	while true; do
 		if [ "$ENABLE_PREVIEW" = "true" ]; then
 
-			playlist_title="$(printf "%s\n${CYAN}󰌍${RESET}  Back\n${RED}󰈆${RESET}  Exit" "$playlist_video_titles" | launcher_with_preview "select video" "$PREVIEW_SCRIPT_FOR_VIDEOS" | tr -d '\n' | sed 's/^[^0-9]  //g')"
+			playlist_title="$(printf "%s\n${CYAN}󰌍${RESET}  Back\n${RED}󰈆${RESET}  Exit" "$playlist_video_titles" | launcher_with_preview "select video" "$PREVIEW_SCRIPT_FOR_PLAYLISTS_EXPLORER" | tr -d '\n' | sed 's/^[^0-9]  //g')"
 		else
 			playlist_title="$(printf "%s\nBack\nExit" "$playlist_video_titles" | launcher "select video" | tr -d '\n' | sed 's/^[^0-9]  //g')"
 		fi
