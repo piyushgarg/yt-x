@@ -423,7 +423,7 @@ echo
 
 ! [ \"$description\" = \"null\" ] && echo -n \"%s\";
 
-" "$description" >"$CLI_PREVIEW_SCRIPTS_DIR/${i}.txt"
+" "$description" >"$CLI_PREVIEW_SCRIPTS_DIR/$(echo "$video" | jq ".title" -r | base64 | tr '/+' '_-').txt"
 
 	done
 }
@@ -511,7 +511,7 @@ PREVIEW_SCRIPT_FOR_VIDEOS="
   $fzf_preview
 
   title={}
-  id=\$(echo -n {} | sed -E 's/^([0-9]+) .*/\1/g;s/^0//g')
+  id=\$(echo {} | base64 | tr '/+' '_-')
   if  [ -f \"$CLI_PREVIEW_SCRIPTS_DIR/\${id}.txt\" ];then
     . \"$CLI_PREVIEW_SCRIPTS_DIR/\${id}.txt\";
   else
