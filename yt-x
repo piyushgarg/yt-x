@@ -1092,7 +1092,7 @@ ${RED}󰈆${RESET}  Exit
 				unset search_term
 				while true; do
 					clear
-					[ -z "$search_term" ] && search_term=$(prompt "What channel would you like to subscribe to") && url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAg%253D%253D" && channels_data=$(run_yt_dlp "$url") && download_preview_images "$channels_data" "https:"
+					[ -z "$search_term" ] && search_term=$(prompt "What channel would you like to explore") && url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAg%253D%253D" && channels_data=$(run_yt_dlp "$url") && download_preview_images "$channels_data" "https:"
 					clear
 					channels=$(echo "$channels_data" | jq '.entries[].channel' -r)
 					export channels_data SHELL
@@ -1107,7 +1107,7 @@ ${RED}󰈆${RESET}  Exit
 				;;
 			Explore\ Playlists)
 				clear
-				search_term=$(prompt "What channel would you like to subscribe to")
+				search_term=$(prompt "What playlist would you like to explore")
 				url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAw%253D%253D"
 				PLAYLISTS_EXTRA_ARGS="--playlist-start 1 --playlist-end $NO_OF_SEARCH_RESULTS"
 				playlists_explorer
