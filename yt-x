@@ -483,7 +483,9 @@ byebye() {
 	exit "${1:-0}"
 }
 prompt() {
-	if command -v "gum" >/dev/null 2>&1; then
+	if [ "$PREFERRED_SELECTOR" = "rofi" ]; then
+		rofi -dmenu -p "$1: "
+	elif command -v "gum" >/dev/null 2>&1; then
 		gum input --header "$CLI_HEADER" --prompt "$1: "
 	else
 		echo "$CLI_HEADER" >/dev/stderr
