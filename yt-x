@@ -88,6 +88,7 @@ DOWNLOAD_DIRECTORY: $DOWNLOAD_DIRECTORY
 "
 }
 load_config() {
+	! [ -f "$CLI_CONFIG_DIR/${CLI_NAME}.conf" ] && touch "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
 	PRETTY_PRINT="$(awk -F': ' '/^PRETTY_PRINT:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	[ -z "$PRETTY_PRINT" ] && PRETTY_PRINT="true"
 
@@ -131,7 +132,7 @@ load_config() {
 	[ -z "$DOWNLOAD_DIRECTORY" ] && DOWNLOAD_DIRECTORY="$HOME/Videos/$CLI_NAME"
 	[ -d "$DOWNLOAD_DIRECTORY" ] || mkdir -p "$DOWNLOAD_DIRECTORY"
 
-	! [ -f "$CLI_CONFIG_DIR/${CLI_NAME}.conf" ] && print_config >"$CLI_CONFIG_DIR/${CLI_NAME}.conf"
+	! [ -s "$CLI_CONFIG_DIR/${CLI_NAME}.conf" ] && print_config >"$CLI_CONFIG_DIR/${CLI_NAME}.conf"
 
 	ROFI_THEME="$(awk -F': ' '/^ROFI_THEME:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	CUSTOM_PLAYLISTS="$CLI_CONFIG_DIR/custom_playlists.json"
