@@ -58,6 +58,9 @@ VIDEO_QUALITY: $VIDEO_QUALITY
 # its cool so enable it
 ENABLE_PREVIEW: $ENABLE_PREVIEW
 
+# what to use for rendering images in the terminalA [chafa/icat]
+IMAGE_RENDERER: $IMAGE_RENDERER
+
 # whether to run mpv as a background process and prevent it from closing even if you terminate the program or terminal session
 DISOWN_STREAMING_PROCESS: $DISOWN_STREAMING_PROCESS
 
@@ -91,6 +94,9 @@ load_config() {
 	! [ -f "$CLI_CONFIG_DIR/${CLI_NAME}.conf" ] && touch "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
 	PRETTY_PRINT="$(awk -F': ' '/^PRETTY_PRINT:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	[ -z "$PRETTY_PRINT" ] && PRETTY_PRINT="true"
+
+	IMAGE_RENDERER="$(awk -F': ' '/^IMAGE_RENDERER:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
+	[ -z "$IMAGE_RENDERER" ] && IMAGE_RENDERER=$([ -n "$KITTY_WINDOW_ID" ] && echo "kitty" || echo "chafa")
 
 	DISOWN_STREAMING_PROCESS="$(awk -F': ' '/^DISOWN_STREAMING_PROCESS:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	[ -z "$DISOWN_STREAMING_PROCESS" ] && DISOWN_STREAMING_PROCESS="true"
@@ -148,7 +154,7 @@ load_config() {
     --marker=">" --pointer="◆" --separator="─" --scrollbar="│"
   '}
 	init_pretty_print
-	export FZF_DEFAULT_OPTS PRETTY_PRINT PLATFORM
+	export FZF_DEFAULT_OPTS PRETTY_PRINT PLATFORM IMAGE_RENDERER
 }
 send_notification() {
 	echo "$1" >&2 && sleep "$NOTIFICATION_DURATION"
@@ -207,14 +213,14 @@ fzf_preview() {
 	if [ "$dim" = x ]; then
 		dim=$(stty size </dev/tty | awk "{print \$2 \"x\" \$1}")
 	fi
-	if [ -z "$KITTY_WINDOW_ID" ] && [ "$((FZF_PREVIEW_TOP + FZF_PREVIEW_LINES))" -eq "$(stty size </dev/tty | awk "{print \$1}")" ]; then
+	if  [ -z "$KITTY_WINDOW_ID" ] && [ "$((FZF_PREVIEW_TOP + FZF_PREVIEW_LINES))" -eq "$(stty size </dev/tty | awk "{print \$1}")" ]; then
 		# Avoid scrolling issue when the Sixel image touches the bottom of the screen
 		# * https://github.com/junegunn/fzf/issues/2544
 		dim=${FZF_PREVIEW_COLUMNS}x$((FZF_PREVIEW_LINES - 1))
 	fi
 
 	# 1. Use kitty icat on kitty terminal
-	if [ -n "$KITTY_WINDOW_ID" ]; then
+	if [ $IMAGE_RENDERER = "icat" ] && [ -n "$KITTY_WINDOW_ID" ]; then
 		# 1. memory is the fastest option but if you want the image to be scrollable,
 		#    you have to use stream.
 		#
@@ -235,7 +241,8 @@ fzf_preview() {
 	elif command -v chafa >/dev/null 2>&1; then
 		case "$PLATFORM" in
 		android) chafa -s "$dim" "$file" ;;
-		*) chafa -f sixel -s "$dim" "$file" ;;
+		windows) chafa -f sixel -s "$dim" "$file" ;;
+		*) chafa -s "$dim" "$file" ;;
 		esac
 		# Add a new line character so that fzf can display multiple images in the preview window
 		echo
