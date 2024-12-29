@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #A script written by Benexl in September 2024 under MIT LICENSE
 
 CLI_HEADER='
@@ -646,7 +646,7 @@ PREVIEW_SCRIPT_FOR_PLAYLISTS_EXPLORER="
 "
 
 playlist_explorer() {
-	SHELL="sh"
+	SHELL="bash"
 	DOWNLOAD_IMAGES=0
 	while true; do
 		[ "$DOWNLOAD_IMAGES" = 0 ] &&
@@ -1053,7 +1053,7 @@ ${RED}󰈆${RESET}  Exit
 
 }
 main() {
-	SHELL="sh"
+	SHELL="bash"
 	clear
 	action="$(printf "\
 ${CYAN}${RESET}  Your Feed
