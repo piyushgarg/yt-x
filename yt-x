@@ -484,7 +484,7 @@ prompt() {
 	if [ "$PREFERRED_SELECTOR" = "rofi" ]; then
 		rofi -dmenu -p "$1: "
 	elif command -v "gum" >/dev/null 2>&1; then
-		gum input --header "$CLI_HEADER" --prompt "$1: "
+		gum input --header "$CLI_HEADER" --prompt "$1: " --value "$2"
 	else
 		echo "$CLI_HEADER" >/dev/stderr
 		printf "%s: " "$1" >/dev/stderr
@@ -748,7 +748,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				fi
 				;;
 			"Download All")
-				playlist_name=$(prompt "Name of the playlist")
+				playlist_name=$(prompt "Name of the playlist" "$playlist_title")
 				if [ -n "$urlForAll" ]; then
 					yt-dlp "$urlForAll" --output "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				else
@@ -756,7 +756,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				fi
 				;;
 			"Download All (Audio Only)")
-				playlist_name=$(prompt "Name of the playlist")
+				playlist_name=$(prompt "Name of the playlist" "$playlist_title")
 				if [ -n "$urlForAll" ]; then
 					yt-dlp "$urlForAll" -x -f 'bestaudio/best' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/$playlist_name/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
 				else
@@ -859,7 +859,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				# For now a pseudo like feature is just as useful
 				custom_playlists="[]"
 				[ -s "$CLI_CONFIG_DIR/custom_playlists.json" ] && custom_playlists=$(cat "$CLI_CONFIG_DIR/custom_playlists.json")
-				playlist_name=$(prompt "Enter the name of the playlist")
+				playlist_name=$(prompt "Enter the name of the playlist" "$playlist_title")
 				playlist_id=$(echo "$url" | sed 's/.*list=//g')
 				custom_playlist="
           {
@@ -966,6 +966,7 @@ playlists_explorer() {
 		esac
 		playlist_title="$(echo "$playlist_title" | sed 's/"/\\"/g;s/ *$//g' | tr -d "\n")"
 		playlist="$(echo "$playlist_results" | jq ".entries|map(select(.title == \"$playlist_title\"))|.[0]")"
+		playlist_title="$(echo "$playlist_title" | sed 's/^.. //g')"
 		url="$(echo "$playlist" | jq '.url' -r)"
 		search_results=$(run_yt_dlp "$url")
 		playlist_explorer
@@ -1063,7 +1064,7 @@ ${CYAN}${RESET}  Search
 ${CYAN}${RESET}  Watch Later
 ${CYAN}󰵀${RESET}  Subscription Feed
 ${CYAN}󰑈${RESET}  Channels
-${CYAN}${RESET}  Custom
+${CYAN}${RESET}  Custom Playlists
 ${CYAN}${RESET}  Liked Videos
 ${CYAN}${RESET}  Saved Videos
 ${CYAN}${RESET}  Watch History
@@ -1130,13 +1131,13 @@ ${RED}󰈆${RESET}  Exit
 			channels_explorer
 		done
 		;;
-	Custom)
+	Custom\ Playlists)
 		! [ -s "$CUSTOM_PLAYLISTS" ] && echo "You dont have any custom playlists create them here <$CUSTOM_PLAYLISTS>" && sleep "$NOTIFICATION_DURATION" && main
 		while true; do
-			_custom=$(printf "%s\nBack" "$(jq -r '.[].name' "$CUSTOM_PLAYLISTS")" | launcher "Select Custom Playlist To Play")
-			[ "$_custom" = "Back" ] && break
-			url=$(jq -r ". | map(select(.name == \"$_custom\" )) | .[0].playlistWatchUrl" "$CUSTOM_PLAYLISTS")
-			urlForAll=$(jq -r ". | map(select(.name == \"$_custom\" )) | .[0].playlistUrl" "$CUSTOM_PLAYLISTS")
+			playlist_title=$(printf "%s\nBack" "$(jq -r '.[].name' "$CUSTOM_PLAYLISTS")" | launcher "Select Custom Playlist To Play")
+			[ "$playlist_title" = "Back" ] && break
+			url=$(jq -r ". | map(select(.name == \"$playlist_title\" )) | .[0].playlistWatchUrl" "$CUSTOM_PLAYLISTS")
+			urlForAll=$(jq -r ". | map(select(.name == \"$playlist_title\" )) | .[0].playlistUrl" "$CUSTOM_PLAYLISTS")
 			search_results=$(run_yt_dlp "$url")
 			playlist_explorer
 		done
