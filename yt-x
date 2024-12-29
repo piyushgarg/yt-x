@@ -1178,6 +1178,7 @@ ${CYAN}󰐑${RESET}  Explore Playlists
 ${CYAN}󱘢${RESET}  Search History
 ${CYAN}${RESET}  Edit Search History
 ${CYAN}󰤀${RESET}  Edit Custom Playlists
+${CYAN}󱄢${RESET}  Edit MPV Config
 ${RED}󰆴${RESET}  Clear Search History
 ${RED}${RESET}  Back
 ${RED}󰈆${RESET}  Exit
@@ -1228,6 +1229,13 @@ ${RED}󰈆${RESET}  Exit
 					$EDITOR "$CLI_CONFIG_DIR/custom_playlists.json"
 				else
 					open "$CLI_CONFIG_DIR/custom_playlists.json"
+				fi
+				;;
+			Edit\ MPV\ Config)
+				if command -v "$EDITOR" >/dev/null 2>&1; then
+					$EDITOR "$HOME/.config/mpv/mpv.conf"
+				else
+					open "$HOME/.config/mpv/mpv.conf"
 				fi
 				;;
 			Clear\ Search\ History)
