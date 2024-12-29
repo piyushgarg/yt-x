@@ -888,7 +888,13 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				sleep "$NOTIFICATION_DURATION"
 				;;
 			"Open in Browser")
-				open "$(echo "$video" | jq '.url' -r)"
+				if command -v "open" >./dev/null 2>&1; then
+					open "$(echo "$video" | jq '.url' -r)"
+				elif command -v "open" >./dev/null 2>&1; then
+					xdg-open "$(echo "$video" | jq '.url' -r)"
+				else
+					send_notification "Could not find xdg-open or open"
+				fi
 				;;
 			Download)
 				video_url=$(echo "$video" | jq '.url' -r)
@@ -1166,8 +1172,12 @@ ${RED}󰈆${RESET}  Exit
 	"Edit Config")
 		if command -v "$EDITOR" >/dev/null 2>&1; then
 			$EDITOR "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
-		else
+		elif command -v "open" >/dev/null 2>&1; then
 			open "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
+		elif command -v "xdg-open" >/dev/null 2>&1; then
+			xdg-open "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
+		else
+			send_notification "Could not find editor env ($EDITOR) or xdg-open or open"
 		fi
 		load_config
 		;;
@@ -1221,22 +1231,34 @@ ${RED}󰈆${RESET}  Exit
 			Edit\ Search\ History)
 				if command -v "$EDITOR" >/dev/null 2>&1; then
 					$EDITOR "$CLI_CACHE_DIR/search_history.txt"
-				else
+				elif command -v "open" >/dev/null 2>&1; then
 					open "$CLI_CACHE_DIR/search_history.txt"
+				elif command -v "xdg-open" >/dev/null 2>&1; then
+					xdg-open "$CLI_CACHE_DIR/search_history.txt"
+				else
+					send_notification "Could not find editor env ($EDITOR) or xdg-open or open"
 				fi
 				;;
 			Edit\ Custom\ Playlists)
 				if command -v "$EDITOR" >/dev/null 2>&1; then
 					$EDITOR "$CLI_CONFIG_DIR/custom_playlists.json"
-				else
+				elif command -v "open" >/dev/null 2>&1; then
 					open "$CLI_CONFIG_DIR/custom_playlists.json"
+				elif command -v "xdg-open" >/dev/null 2>&1; then
+					xdg-open "$CLI_CONFIG_DIR/custom_playlists.json"
+				else
+					send_notification "Could not find editor env ($EDITOR) or xdg-open or open"
 				fi
 				;;
 			Edit\ MPV\ Config)
 				if command -v "$EDITOR" >/dev/null 2>&1; then
 					$EDITOR "$HOME/.config/mpv/mpv.conf"
-				else
+				elif command -v "open" >/dev/null 2>&1; then
 					open "$HOME/.config/mpv/mpv.conf"
+				elif command -v "xdg-open" >/dev/null 2>&1; then
+					xdg-open "$HOME/.config/mpv/mpv.conf"
+				else
+					send_notification "Could not find editor env ($EDITOR) or xdg-open or open"
 				fi
 				;;
 			Clear\ Search\ History)
@@ -1330,7 +1352,18 @@ while [ $# -gt 0 ]; do
 		exit 0
 		;;
 	-e | --edit-config)
-		$PREFERRED_EDITOR "$CLI_CONFIG_DIR/${CLI_NAME}.conf" || exit 1
+		if command -v "$EDITOR" >/dev/null 2>&1; then
+			$EDITOR "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
+		elif command -v "$PREFERRED_EDITOR" >/dev/null 2>&1; then
+			open "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
+		elif command -v "open" >/dev/null 2>&1; then
+			open "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
+		elif command -v "xdg-open" >/dev/null 2>&1; then
+			xdg-open "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
+		else
+			send_notification "Could not find editor env ($EDITOR) or xdg-open or open" && exit 1
+		fi
+
 		byebye
 		;;
 	-U | --update)
