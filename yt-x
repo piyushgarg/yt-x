@@ -1170,6 +1170,7 @@ ${RED}󰈆${RESET}  Exit
 		else
 			open "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
 		fi
+		load_config
 		;;
 	Miscellaneous)
 		while true; do
