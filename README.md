@@ -106,7 +106,7 @@ add something like this in your mpv.conf
 ytdl-raw-options=cookies-from-browser=chrome
 
 # You can also set the quality
-ytdl-format="best[height<=1080]/bestvideo[height<=1080]+bestaudio/best"
+ytdl-format="best[height=1080]/bestvideo[height=1080]+bestaudio/best[height=720]/bestvideo[height=720]+bestaudio/best"
 ```
 
 ## Define Custom Playlists
