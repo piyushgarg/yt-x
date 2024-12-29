@@ -1280,8 +1280,10 @@ Options:
     disown the downloading process so you can contine streaming even if you close $CLI_NAME
   --no-disown-downloading-process
     don't disown the downloading process
-  -p <selector>,--preferred-selector <selector> [fzf/rofi]
+  -s <selector>,--preferred-selector <selector> [fzf/rofi]
     set the preferred selector for $CLI_NAME to use
+  -p <player>,--player <player> [mpv/vlc]
+    set the video player for $CLI_NAME to use
   --preview
     enable the preview window
   --no-preview
@@ -1326,12 +1328,7 @@ while [ $# -gt 0 ]; do
 		check_update "A new version of $CLI_NAME has been found would you like to upgrade(y/n)"
 		exit 0
 		;;
-	-s | --search)
-		[ -n "$2" ] || usage 1
-		SEARCH="$2"
-		shift
-		;;
-	-p | --preferred-selector)
+	-s | --preferred-selector)
 		[ -n "$2" ] || usage 1
 		PREFERRED_SELECTOR="$2"
 		shift
@@ -1359,7 +1356,7 @@ while [ $# -gt 0 ]; do
 		ROFI_THEME="$2"
 		shift
 		;;
-	--player)
+	-p | --player)
 		[ -n "$2" ] || usage 1
 		PLAYER="$2"
 		shift
@@ -1371,7 +1368,7 @@ Name=$CLI_NAME
 Type=Application
 version=$CLI_VERSION
 Path=$HOME
-Comment=Read and manage your calibre books from the terminal
+Comment=Browse Youtube from the terminal
 Terminal=false
 Icon=$CLI_DIR/assets/logo.png
 Exec=$0 --preferred-selector rofi
@@ -1384,32 +1381,22 @@ Categories=Education
 		case "$2" in
 		-f | --fish)
 			echo "\
-# --- functions ---
-function _lib_x_complete_search
-  for comp_line in (calibredb list_categories --csv) 
-    echo (echo \$comp_line|cut --delimiter , --fields 1):(echo \$comp_line|cut --delimiter , --fields 2|tr -d '\"')
-  end
-end
-
 # --- completions ---
-complete -c $CLI_NAME --no-files --arguments \"completions\" --condition 'not __fish_contains_opt search s sort-by S e edit-config p preferred-selector d disown-reading-process D no-disown-reading-process E generate-desktop-entry rofi-theme'
+complete -c $CLI_NAME --no-files --arguments \"completions\" --condition 'not __fish_contains_opt sort-by S e edit-config s preferred-selector  E generate-desktop-entry rofi-theme'
 
 complete -c $CLI_NAME --no-files --short-option h --long-option help --description 'Print a short help text and exit'
 complete -c $CLI_NAME --no-files --short-option v --long-option version --description 'Print a short version string and exit' --condition 'not __fish_seen_subcommand_from completions'
 
 complete -c $CLI_NAME --no-files --short-option e --long-option edit-config --description 'Edit $CLI_NAME config file' --condition 'not __fish_seen_subcommand_from completions'
-complete -c $CLI_NAME --no-files --short-option p --long-option preferred-selector --description 'your preferred selector' --condition 'not __fish_seen_subcommand_from completions' --exclusive --arguments 'fzf rofi'
-complete -c $CLI_NAME --no-files --short-option d --long-option disown-reading-process --description 'disown the reading process' --condition 'not __fish_seen_subcommand_from completions'
-complete -c $CLI_NAME --no-files --short-option D --long-option no-disown-reading-process --description 'dont disown the reading process' --condition 'not __fish_seen_subcommand_from completions'
+complete -c $CLI_NAME --no-files --short-option U --long-option update --description 'update the script' --condition 'not __fish_seen_subcommand_from completions'
+complete -c $CLI_NAME --no-files --short-option p --long-option player --description 'the video player to use' --condition 'not __fish_seen_subcommand_from completions' --exclusive --arguments 'mpv vlc'
+complete -c $CLI_NAME --no-files --short-option s --long-option preferred-selector --description 'your preferred selector' --condition 'not __fish_seen_subcommand_from completions' --exclusive --arguments 'fzf rofi'
 complete -c $CLI_NAME --no-files --short-option E --long-option generate-desktop-entry --description 'generate desktop entry info' --condition 'not __fish_seen_subcommand_from completions' 
-complete -c $CLI_NAME --no-files --short-option P --long-option private --description 'dont update recent' --condition 'not __fish_seen_subcommand_from completions'
 
 complete -c $CLI_NAME --no-files --long-option preview --description 'enable preview window' --condition 'not __fish_seen_subcommand_from completions' 
 complete -c $CLI_NAME --no-files --long-option no-preview --description 'disable preview window' --condition 'not __fish_seen_subcommand_from completions' 
 
 complete -c $CLI_NAME --force-files --long-option rofi-theme --description 'the path to your rofi config file' --condition 'not __fish_seen_subcommand_from completions' 
-
-complete -c $CLI_NAME --no-files --short-option s --long-option search --description 'search for a book' --condition 'not __fish_seen_subcommand_from completions' --exclusive --arguments \"(_lib_x_complete_search)\"
 
 complete -c $CLI_NAME --no-files --short-option z --long-option zsh --description 'print zsh completions' --condition '__fish_seen_subcommand_from completions'
 complete -c $CLI_NAME --no-files --short-option b --long-option bash --description 'print bash completions' --condition '__fish_seen_subcommand_from completions'
@@ -1418,11 +1405,11 @@ complete -c $CLI_NAME --no-files --short-option f --long-option fish --descripti
 			;;
 		-b | --bash)
 			# TODO: write bash completions
-			command ...
+			echo Contribute to $CLI_NAME by writing bash completions
 			;;
 		-z | --zsh)
 			# TODO: write zsh completions
-			command ...
+			echo Contribute to $CLI_NAME by writing zsh completions
 			;;
 		-h | --help)
 			echo "\
