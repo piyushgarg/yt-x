@@ -713,6 +713,7 @@ ${CYAN}󱑤${RESET}  Download
 ${CYAN}󰦗${RESET}  Download All
 ${CYAN}󱑤${RESET}  Download (Audio Only)
 ${CYAN}󰦗${RESET}  Download All (Audio Only)
+${CYAN}${RESET}  Open in Browser
 ${CYAN}󰌍${RESET}  Back
 ${CYAN}${RESET}  Main Menu
 ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
@@ -884,13 +885,12 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				;;
 			"Visit Channel")
 				# TODO: use youtube api to enable video subscriptions
-				echo contribute to the project by adding this feature
-				sleep "$NOTIFICATION_DURATION"
+				send_notification "contribute to the project by adding this feature"
 				;;
 			"Open in Browser")
-				if command -v "open" >./dev/null 2>&1; then
+				if command -v "open" >/dev/null 2>&1; then
 					open "$(echo "$video" | jq '.url' -r)"
-				elif command -v "open" >./dev/null 2>&1; then
+				elif command -v "xdg-open" >/dev/null 2>&1; then
 					xdg-open "$(echo "$video" | jq '.url' -r)"
 				else
 					send_notification "Could not find xdg-open or open"
