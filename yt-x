@@ -1193,6 +1193,7 @@ ${CYAN}󱘢${RESET}  Search History
 ${CYAN}${RESET}  Edit Search History
 ${CYAN}󰤀${RESET}  Edit Custom Playlists
 ${CYAN}󱄢${RESET}  Edit MPV Config
+${CYAN}󰮆${RESET}  Edit yt-dlp Config
 ${RED}󰆴${RESET}  Clear Search History
 ${RED}${RESET}  Back
 ${RED}󰈆${RESET}  Exit
@@ -1260,6 +1261,17 @@ ${RED}󰈆${RESET}  Exit
 					open "$HOME/.config/mpv/mpv.conf"
 				elif command -v "xdg-open" >/dev/null 2>&1; then
 					xdg-open "$HOME/.config/mpv/mpv.conf"
+				else
+					send_notification "Could not find editor env ($EDITOR) or xdg-open or open"
+				fi
+				;;
+			"Edit yt-dlp Config")
+				if command -v "$EDITOR" >/dev/null 2>&1; then
+					$EDITOR "$HOME/.config/yt-dlp/config"
+				elif command -v "open" >/dev/null 2>&1; then
+					open "$HOME/.config/yt-dlp/config"
+				elif command -v "xdg-open" >/dev/null 2>&1; then
+					xdg-open "$HOME/.config/yt-dlp/config"
 				else
 					send_notification "Could not find editor env ($EDITOR) or xdg-open or open"
 				fi
