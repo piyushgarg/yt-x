@@ -797,11 +797,12 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 						;;
 					esac
 
-					current_recent_videos='{"entries":[]}'
-					[ -s "$CLI_CONFIG_DIR/recent.json" ] && current_recent_videos=$(cat "$CLI_CONFIG_DIR/recent.json")
-					id=$(echo "$video" | jq '.id' -r)
-					echo "$current_recent_videos" | jq "{\"entries\":[.entries[] | select(.id != \"$id\")]}|.entries+=[$(echo "$video" | jq '.title |= sub("^[0-9]+ "; "")')]" | jq "{\"entries\":.entries[-$NO_OF_RECENT:]}" >"$CLI_CONFIG_DIR/recent.json"
 				fi
+
+				current_recent_videos='{"entries":[]}'
+				[ -s "$CLI_CONFIG_DIR/recent.json" ] && current_recent_videos=$(cat "$CLI_CONFIG_DIR/recent.json")
+				id=$(echo "$video" | jq '.id' -r)
+				echo "$current_recent_videos" | jq "{\"entries\":[.entries[] | select(.id != \"$id\")]}|.entries+=[$(echo "$video" | jq '.title |= sub("^[0-9]+ "; "")')]" | jq "{\"entries\":.entries[-$NO_OF_RECENT:]}" >"$CLI_CONFIG_DIR/recent.json"
 				;;
 			Mix)
 				video_id=$(echo "$video" | jq '.id' -r)
@@ -844,11 +845,12 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 						;;
 					esac
 
-					current_recent_videos='{"entries":[]}'
-					[ -s "$CLI_CONFIG_DIR/recent.json" ] && current_recent_videos=$(cat "$CLI_CONFIG_DIR/recent.json")
-					id=$(echo "$video" | jq '.id' -r)
-					echo "$current_recent_videos" | jq "{\"entries\":[.entries[] | select(.id != \"$id\")]}|.entries+=[$(echo "$video" | jq '.title |= sub("^[0-9]+ "; "")')]" | jq "{\"entries\":.entries[-$NO_OF_RECENT:]}" >"$CLI_CONFIG_DIR/recent.json"
 				fi
+
+				current_recent_videos='{"entries":[]}'
+				[ -s "$CLI_CONFIG_DIR/recent.json" ] && current_recent_videos=$(cat "$CLI_CONFIG_DIR/recent.json")
+				id=$(echo "$video" | jq '.id' -r)
+				echo "$current_recent_videos" | jq "{\"entries\":[.entries[] | select(.id != \"$id\")]}|.entries+=[$(echo "$video" | jq '.title |= sub("^[0-9]+ "; "")')]" | jq "{\"entries\":.entries[-$NO_OF_RECENT:]}" >"$CLI_CONFIG_DIR/recent.json"
 				;;
 			Save)
 				# For now a pseudo like feature is just as useful
