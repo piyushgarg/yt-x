@@ -714,8 +714,8 @@ ${CYAN}󰦗${RESET}  Download All
 ${CYAN}󱑤${RESET}  Download (Audio Only)
 ${CYAN}󰦗${RESET}  Download All (Audio Only)
 ${CYAN}${RESET}  Open in Browser
+${CYAN}${RESET}  Shell
 ${CYAN}󰌍${RESET}  Back
-${CYAN}${RESET}  Main Menu
 ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 			clear
 			case "$media_action" in
@@ -919,9 +919,25 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 			Back)
 				break
 				;;
-			"Main Menu")
-				# TODO: MAY make it go to menu like it used to
-				break
+			Shell)
+				video_url=$(echo "$video" | jq '.url' -r)
+				export url urlForAll search_results video video_url playlist_title CLI_HEADER CLI_NAME DOWNLOAD_DIRECTORY
+				bash --rcfile <(
+					cat <<'EOF'
+clear
+echo "$CLI_HEADER"
+echo "Welcome to the $CLI_NAME shell."
+echo "You can use the following variables:"
+echo "  - url"
+echo "  - urlForAll"
+echo "  - search_results"
+echo "  - video"
+echo "  - video_url"
+echo "  - playlist_title"
+echo "  - DOWNLOAD_DIRECTORY"
+[ -f ~/.bashrc ] && . ~/.bashrc
+EOF
+				)
 				;;
 			Exit)
 				byebye
