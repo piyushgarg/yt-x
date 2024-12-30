@@ -1,3 +1,5 @@
+# yt-x
+
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/Benex254/yt-x)
 ![GitHub License](https://img.shields.io/github/license/Benex254/yt-x)
 ![GitHub file size in bytes](https://img.shields.io/github/size/Benex254/yt-x/yt-x)
@@ -9,167 +11,150 @@ Browse YouTube from your terminal.
 [yt-x.webm](https://github.com/user-attachments/assets/d4aa3329-c009-4625-84a6-390519595648)
 
 <details>
-<summary>Browse Channels You Have Subscribed To From The Terminal</summary>
-  
-  [yt-x-channels.webm](https://github.com/user-attachments/assets/a90e68c6-0b06-45f1-8458-7733057af648)
-
-</details>
-<details>
-  <summary>View Channels Playlists</summary>
-
-[yt-x-channels-playlists.webm](https://github.com/user-attachments/assets/96868b70-7add-4172-b646-26f17f8e5afe)
-
+<summary>Workflow Demo</summary>
+https://www.reddit.com/r/unixporn/comments/1hou2s7/oc_ytx_v040_workflow_new_year_new_way_to_explore/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
 </details>
 
-<details>
-  <summary>Search For Something From a Specific Channel</summary>
-  
-  [yt-x-channels-search.webm](https://github.com/user-attachments/assets/464420b3-2aca-4fd9-b369-01a8de5b487b)
+## Features
 
-</details>
+- **Interactive Menu**: Text-based UI using `fzf` or `rofi` for seamless navigation.
+- **YouTube-Specific Menus**: Access your feed, trending videos, playlists, watch later, subscriptions feed, liked videos, clips.
+- **Playback Support**: Play videos and audio via `mpv` or `vlc`.
+- **Search Functionality**: Search for videos, channels and playlists directly.
+- **Channel Exploration**: Explore channels, including their videos, streams, podcasts, shorts, and playlists.
+- **Saved Channels**: Bookmark your favorite channels for quick access, with support for importing existing subscriptions.
+- **Saved Videos**: Save videos to watch later.
+- **Mixes**: Generate and explore YouTube song mixes.
+- **Custom Playlists**: Save playlists for easier access.
+- **Download Management**: Download videos, audio, and playlists using `yt-dlp`.
+- **History & Recents**: Track your recent videos and search history.
+- **Configuration Management**: Customize and manage configurations for yt-x, mpv and yt-dlp with ease.
+- **Miscellaneous Features**:
+  - Shell completions for `bash`, `zsh`, and `fish`.
+  - Desktop entry generation for easy access.
 
-<details>
-<summary>Watch Whats Featured in A Specific Channel</summary>
+## Installation
 
-[yt-x-channels-featured.webm](https://github.com/user-attachments/assets/6c9e817a-8df3-4859-be04-395bc73aecad)
-
-</details>
-
-<details>
-  <summary>I Use Neovim By The Way</summary>
-
-[yt-x-config.webm](https://github.com/user-attachments/assets/2d5b25d4-66ea-46c7-94da-5ecff22f9cde)
-
-</details>
-
-# Installation
-
-![Linux/BSD](https://img.shields.io/badge/-Linux/BSD-red.svg?style=for-the-badge&logo=linux)
-![Arch Linux](https://img.shields.io/badge/-Arch_Linux-black.svg?style=for-the-badge&logo=archlinux)
+![Linux/BSD](https://img.shields.io/badge/-Linux/BSD-red.svg?style=for-the-badge&logo=linux) 
+![Arch Linux](https://img.shields.io/badge/-Arch_Linux-black.svg?style=for-the-badge&logo=archlinux) 
 ![MacOS](https://img.shields.io/badge/-MacOS-lightblue.svg?style=for-the-badge&logo=apple)
 ![Android](https://img.shields.io/badge/-Android-green.svg?style=for-the-badge&logo=android)
 
 ```bash
-# nixos
+# NixOS
 nix profile install github:Benexl/yt-x
 
-# latest release
+# Latest Release
 curl -sL "https://raw.githubusercontent.com/Benexl/yt-x/refs/tags/<latest-release-tag>/yt-x" -o ~/.local/bin/yt-x && chmod +x ~/.local/bin/yt-x
 
-# Development version
+# Development Version
 curl -sL "https://raw.githubusercontent.com/Benexl/yt-x/refs/heads/master/yt-x" -o ~/.local/bin/yt-x && chmod +x ~/.local/bin/yt-x
 ```
 
-# Dependencies
 
-**Required:**
+## Dependencies
 
-- jq - to pass the json data
-- curl - to download preview images
-- yt-dlp - to provide the data
-- fzf - for the main ui
-- mpv - for streaming
-- ffmpeg - to properly download hsl streams
+### Required
 
-**optional:**
+- [jq](https://github.com/jqlang/jq) - JSON parsing.
+- [curl](https://curl.se/) - Download preview images.
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - Fetch YouTube data.
+- [fzf](https://github.com/junegunn/fzf) - Main UI navigation.
+- [mpv](https://mpv.io/) - Video and audio playback.
+- [ffmpeg](https://www.ffmpeg.org/) - Proper HLS stream downloading.
+- [bash](https://www.gnu.org/software/bash/) - Script interpreter.
 
-- gum - for an even better ui
-- chafa - image rendering
-- icat - image rendering
-- imgcat - image rendering
+### Optional
 
-# Usage
+- [gum](https://github.com/charmbracelet/gum) - Enhanced UI (highly recommended).
+- [chafa](https://github.com/hpjansson/chafa) - Cross-terminal image rendering (highly recommended).
+- [icat](https://sw.kovidgoyal.net/kitty/) - Image rendering.
+- [imgcat](https://github.com/danielgatis/imgcat) - Image rendering.
+- [rofi](https://github.com/davatorium/rofi) - Alternate UI.
+
+---
+
+## Usage
 
 ```bash
-# launch the ui
+# Launch the UI
 yt-x
 
-# edit your config
+# Edit configuration
 yt-x -e
+
+# Specify player at runtime
+yt-x --player <mpv/vlc>
+
+# Set selector at runtime
+yt-x -s <fzf/rofi>
+
+# Specify Rofi theme path
+yt-x --rofi-theme <path>
+
+# Enable/disable preview
+yt-x --preview / yt-x --no-preview
+
+# Print desktop entry
+yt-x -E
+
+# Print shell completions
+yt-x completions --bash
+yt-x completions --zsh
+yt-x completions --fish
+
+# Update the script
+yt-x --update
+
+# Display help
+yt-x --help
 ```
 
-## TIPS
+---
 
-To enable imports of subscriptions and viewing of private playlists and videos
-set your preferred browser in your config file
+## Tips
 
-For Example:
+### Enabling Imports of Subscriptions & Private Playlists
+
+Set your preferred browser in the configuration file:
 
 ```ini
 PREFERRED_BROWSER: chrome
 ```
 
-To enable mpv to directly access private playlists and videos
-add something like this in your mpv.conf
+To enable `mpv` to access private playlists and videos, add this to `mpv.conf`:
 
 ```ini
 ytdl-raw-options=cookies-from-browser=chrome
-
-# You can also set the quality
 ytdl-format="best[height=1080]/bestvideo[height=1080]+bestaudio/best[height=720]/bestvideo[height=720]+bestaudio/best"
 ```
 
-## Define Custom Playlists
+For additional enhancements, consider:
 
-This option lets you define custom playlists.
-Its a list of playlist objects.
-located: `~/.config/yt-x/custom_playlists.json`
+- [uosc](https://github.com/tomasklaen/uosc) for a modern `mpv` UI.
+- [thumbfast](https://github.com/po5/thumbfast) for thumbnail timeline previews.
+  
+## Custom Playlists
 
-For example:
+Define custom playlists by editing `~/.config/yt-x/custom_playlists.json` (or use the UI):
 
 ```json
 [
   {
-    "name": "<name of the playlist, should only contain letters or numbers>",
+    "name": "<playlist name>",
     "playlistUrl": "https://www.youtube.com/playlist?list=<playlist-id>",
     "playlistWatchUrl": "https://www.youtube.com/watch?list=<playlist-id>"
   }
 ]
 ```
 
-# Contribution
+## Contribution
 
-Pr's are highly welcomed.
+Pull requests are highly welcome!
 
-# TODO
+## Support
 
-**Features:**
-
-- [x] Add like video functionality
-- [x] Use a JSON file to store custom playlists in order to allow more features
-- [ ] Handle visit channel in browser option
-- [x] Update script option
-- [x] Add ability to generate mixes based on a video
-- [ ] Add caching for faster load times when loading data with yt-dlp
-- [x] implement pseudo subscriptions as explore channels
-- [x] explore playlists
-- [x] save current playlist
-- [ ] filter search
-- [x] work on playlist previews
-- [ ] option to setup desktop notifications for a channel you want to get updates on new videos
-- [ ] previews in rofi mode
-- [x] view shorts for a specific channel
-- [x] view podcasts for a specific channel
-- [x] consolidate playlist exploring code to one function
-- [x] consolidate channel exploring code to one function
-- [x] make the code posix compliant
-
-**Fix:**
-
-- [x] Fix the channel sub menu by making it conform to the new preview logic
-- [x] Fix the channel image preview
-- [x] Fix bug where going back in the channels menu may result into weird behavior
-
-**Documentation and refactor:**
-
-- [ ] Document all functionality
-- [x] Save the image and preview scripts with the filename as the id of the video or channel.
-- [x] Write completions for fish
-- [x] Don't force sixel graphics when using chafa
-
-# Receiving Support
-
-You can find me here incase you need any help setting it up or just want to hang with the community.
+Need help? Join the community on Discord:
 
 <p align="center">
 <a href="https://discord.gg/HBEmAwvbHV">
@@ -177,8 +162,9 @@ You can find me here incase you need any help setting it up or just want to hang
 </a>
 </p>
 
-# supporting the project
 
-Give the project a star and consider directly contributing to the code.
+## Supporting the Project
+
+Give the project a star and consider contributing to the codebase.
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y8ZAA7N)
