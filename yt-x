@@ -808,9 +808,19 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				video_id=$(echo "$video" | jq '.id' -r)
 				url0=$urlForAll
 				urlForAll="https://www.youtube.com/watch?v=${video_id}&list=RD$video_id"
-				search_results=$(run_yt_dlp "$urlForAll")
+
+				_search_results="$search_results"
+				search_results=$(
+					if command -v "gum" >/dev/null 2>&1; then
+						gum spin --show-output -- yt-dlp "$urlForAll" -J --flat-playlist --extractor-args youtubetab:approximate_date $PREFERRED_BROWSER $PLAYLISTS_EXTRA_ARGS --playlist-start 1 --playlist-end $NO_OF_SEARCH_RESULTS
+					else
+						echo "Loading..." >/dev/stderr
+						yt-dlp "$urlForAll" -J --flat-playlist --extractor-args youtubetab:approximate_date $PREFERRED_BROWSER $PLAYLISTS_EXTRA_ARGS --playlist-start 1 --playlist-end $NO_OF_SEARCH_RESULTS
+					fi
+				)
 				playlist_explorer
 				urlForAll=$url0
+				search_results="$_search_results"
 				;;
 			Watch)
 				printf "${MAGENTA}Now watching:${RESET} $title\n"
