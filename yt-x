@@ -193,7 +193,7 @@ check_update() {
 	update=$(curl -s "https://raw.githubusercontent.com/Benexl/yt-x/refs/heads/master/yt-x")
 	update="$(printf '%s\n' "$update" | diff -u "$(command -v yt-x)" - 2>/dev/null)"
 	if [ -n "$update" ]; then
-		confirm "Would you like to see the changes" && echo "$update" | less
+		confirm "An update has been found would you like to see the changes before deciding whether to update" && echo "$update" | less
 		if [ "$PREFERRED_SELECTOR" = "fzf" ]; then
 			answer=$(prompt "$1")
 		else
