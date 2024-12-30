@@ -58,7 +58,7 @@ VIDEO_QUALITY: $VIDEO_QUALITY
 # its cool so enable it
 ENABLE_PREVIEW: $ENABLE_PREVIEW
 
-# what to use for rendering images in the terminalA [chafa/icat]
+# what to use for rendering images in the terminal [chafa/icat]
 IMAGE_RENDERER: $IMAGE_RENDERER
 
 # whether to run mpv as a background process and prevent it from closing even if you terminate the program or terminal session
