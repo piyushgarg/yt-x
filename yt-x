@@ -17,10 +17,12 @@ CLI_VERSION="0.4.0"
 CLI_AUTHOR="Benexl"
 CLI_DIR="$(dirname "$(realpath "$0")")"
 CLI_CONFIG_DIR="$HOME/.config/$CLI_NAME"
+CLI_EXTENSION_DIR="$CLI_CONFIG_DIR/extentions"
 CLI_CACHE_DIR="$HOME/.cache/$CLI_NAME"
 CLI_PREVIEW_IMAGES_CACHE_DIR="$CLI_CACHE_DIR/preview_images"
 CLI_PREVIEW_SCRIPTS_DIR="$CLI_CACHE_DIR/preview_text"
 [ -d "$CLI_CONFIG_DIR" ] || mkdir -p "$CLI_CONFIG_DIR"
+[ -d "$CLI_EXTENSION_DIR" ] || mkdir -p "$CLI_EXTENSION_DIR"
 [ -d "$CLI_PREVIEW_IMAGES_CACHE_DIR" ] || mkdir -p "$CLI_PREVIEW_IMAGES_CACHE_DIR"
 [ -d "$CLI_PREVIEW_SCRIPTS_DIR" ] || mkdir -p "$CLI_PREVIEW_SCRIPTS_DIR"
 
@@ -1425,6 +1427,8 @@ Options:
     set the preferred selector for $CLI_NAME to use
   -p <player>,--player <player> [mpv/vlc]
     set the video player for $CLI_NAME to use
+  -x <extension>,--extension <extension> [name of extension file at $CLI_EXTENSION_DIR]
+    set the extension for $CLI_NAME to use
   --preview
     enable the preview window
   --no-preview
@@ -1542,6 +1546,7 @@ complete -c $CLI_NAME --no-files --short-option v --long-option version --descri
 complete -c $CLI_NAME --no-files --short-option e --long-option edit-config --description 'Edit $CLI_NAME config file' --condition 'not __fish_seen_subcommand_from completions'
 complete -c $CLI_NAME --no-files --short-option U --long-option update --description 'update the script' --condition 'not __fish_seen_subcommand_from completions'
 complete -c $CLI_NAME --no-files --short-option p --long-option player --description 'the video player to use' --condition 'not __fish_seen_subcommand_from completions' --exclusive --arguments 'mpv vlc'
+complete -c $CLI_NAME --no-files --short-option x --long-option extension --description 'The extension to use' --condition 'not __fish_seen_subcommand_from completions' --exclusive --arguments (command ls $CLI_EXTENSION_DIR)
 complete -c $CLI_NAME --no-files --short-option s --long-option preferred-selector --description 'your preferred selector' --condition 'not __fish_seen_subcommand_from completions' --exclusive --arguments 'fzf rofi'
 complete -c $CLI_NAME --no-files --short-option E --long-option generate-desktop-entry --description 'generate desktop entry info' --condition 'not __fish_seen_subcommand_from completions' 
 
@@ -1603,6 +1608,11 @@ Example:
 
 		esac
 		exit 0
+		;;
+	-x | --extension)
+		[ -n "$2" ] || usage 1
+		. "$CLI_EXTENSION_DIR/$2"
+		shift
 		;;
 	*)
 		usage 1
