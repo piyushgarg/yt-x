@@ -925,6 +925,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 		done
 	done
 	unset urlForAll
+	unset search_results
 }
 get_channels_data() {
 	[ "$FORCE_CHANNEL_THUMBNAILS_DOWNLOAD" = "0" ] && download_preview_images "$channels_data" "https:"
