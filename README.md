@@ -7,6 +7,7 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/Benex254/yt-x)
 
 Browse YouTube from your terminal.
+Plus other sites yt-dlp supports.
 
 [yt-x.webm](https://github.com/user-attachments/assets/d4aa3329-c009-4625-84a6-390519595648)
 
@@ -29,14 +30,16 @@ https://www.reddit.com/r/unixporn/comments/1hou2s7/oc_ytx_v040_workflow_new_year
 - **Download Management**: Download videos, audio, and playlists using `yt-dlp`.
 - **History & Recents**: Track your recent videos and search history.
 - **Configuration Management**: Customize and manage configurations for yt-x, mpv and yt-dlp with ease.
+- **Extensions:** Extend yt-x with your own custom ui and preview logic allowing more precise coverage of other sites that yt-dlp supports🥳
+- **Custom Commands:** Basically a simple way to achieve the same thing with extensions. A custom command is just a yt-dlp command that loads a playlist or playlist like json.
 - **Miscellaneous Features**:
   - Shell completions for `bash`, `zsh`, and `fish`.
   - Desktop entry generation for easy access.
 
 ## Installation
 
-![Linux/BSD](https://img.shields.io/badge/-Linux/BSD-red.svg?style=for-the-badge&logo=linux) 
-![Arch Linux](https://img.shields.io/badge/-Arch_Linux-black.svg?style=for-the-badge&logo=archlinux) 
+![Linux/BSD](https://img.shields.io/badge/-Linux/BSD-red.svg?style=for-the-badge&logo=linux)
+![Arch Linux](https://img.shields.io/badge/-Arch_Linux-black.svg?style=for-the-badge&logo=archlinux)
 ![MacOS](https://img.shields.io/badge/-MacOS-lightblue.svg?style=for-the-badge&logo=apple)
 ![Android](https://img.shields.io/badge/-Android-green.svg?style=for-the-badge&logo=android)
 
@@ -50,7 +53,6 @@ curl -sL "https://raw.githubusercontent.com/Benexl/yt-x/refs/tags/<latest-releas
 # Development Version
 curl -sL "https://raw.githubusercontent.com/Benexl/yt-x/refs/heads/master/yt-x" -o ~/.local/bin/yt-x && chmod +x ~/.local/bin/yt-x
 ```
-
 
 ## Dependencies
 
@@ -133,7 +135,7 @@ For additional enhancements, consider:
 
 - [uosc](https://github.com/tomasklaen/uosc) for a modern `mpv` UI.
 - [thumbfast](https://github.com/po5/thumbfast) for thumbnail timeline previews.
-  
+
 ## Custom Playlists
 
 Define custom playlists by editing `~/.config/yt-x/custom_playlists.json` (or use the UI):
@@ -161,7 +163,6 @@ Need help? Join the community on Discord:
 <img src="https://invidget.switchblade.xyz/C4rhMA4mmK">
 </a>
 </p>
-
 
 ## Supporting the Project
 
