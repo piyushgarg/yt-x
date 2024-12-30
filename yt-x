@@ -142,6 +142,7 @@ load_config() {
 
 	ROFI_THEME="$(awk -F': ' '/^ROFI_THEME:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	CUSTOM_PLAYLISTS="$CLI_CONFIG_DIR/custom_playlists.json"
+	F_CUSTOM_CMDS="$CLI_CONFIG_DIR/custom_cmds.json"
 	PLAYLIST_START="1"
 	PLAYLIST_END="$NO_OF_SEARCH_RESULTS"
 
@@ -1218,10 +1219,13 @@ ${RED}󰈆${RESET}  Exit
 ${CYAN}󰵀${RESET}  Explore Channels
 ${CYAN}󰐑${RESET}  Explore Playlists
 ${CYAN}󱘢${RESET}  Search History
+${CYAN}󰆺${RESET}  New Custom Command
+${CYAN}󰡦${RESET}  Custom Commands
 ${CYAN}${RESET}  Edit Search History
 ${CYAN}󰤀${RESET}  Edit Custom Playlists
 ${CYAN}󱄢${RESET}  Edit MPV Config
 ${CYAN}󰮆${RESET}  Edit yt-dlp Config
+${CYAN}󱘫${RESET}  Edit Custom Commands
 ${RED}󰆴${RESET}  Clear Search History
 ${RED}${RESET}  Back
 ${RED}󰈆${RESET}  Exit
@@ -1267,6 +1271,50 @@ ${RED}󰈆${RESET}  Exit
 				search_results=$(run_yt_dlp "$url")
 				playlist_explorer
 				;;
+			New\ Custom\ Command)
+				clear
+				custom_yt_dlp_cmd=$(prompt "Enter the custom yt-dlp command" "yt-dlp -J --flat-playlist --extractor-args youtubetab:approximate_date $PREFERRED_BROWSER https://youtube.com")
+				custom_cmds="[]"
+				[ -s "$F_CUSTOM_CMDS" ] && custom_cmds=$(cat "$F_CUSTOM_CMDS")
+				custom_cmd_name=$(prompt "Enter the name of the new custom command")
+				custom_cmd="
+          {
+            \"name\": \"$custom_cmd_name\",
+            \"cmd\": \"$custom_yt_dlp_cmd\"
+          }
+        "
+				echo "$custom_cmds" | jq ".+=[$custom_cmd]" >"$F_CUSTOM_CMDS" && send_notification "successfully added to custom cmds" || send_notification "Failed to add to custom cmds"
+
+				echo Running new custom command...
+				search_results=$(
+					if command -v "gum" >/dev/null 2>&1; then
+						gum spin --show-output --show-error -- $custom_yt_dlp_cmd || send_notification "Failed to fetch data : ("
+					else
+						echo "Loading..." >/dev/stderr
+						$custom_yt_dlp_cmd || send_notification "Failed to fetch data : ("
+					fi
+				)
+
+				playlist_explorer
+				;;
+			Custom\ Commands)
+				! [ -s "$F_CUSTOM_CMDS" ] && send_notification "You dont have any custom cmds create them here <$F_CUSTOM_CMDS>"
+				while true; do
+					custom_cmd_name=$(printf "%s\nBack" "$(jq -r '.[].name' "$F_CUSTOM_CMDS")" | launcher "Select Custom Data Loader Command To Run")
+					[ "$custom_cmd_name" = "Back" ] && break
+					custom_yt_dlp_cmd=$(jq -r ". | map(select(.name == \"$custom_cmd_name\" )) | .[0].cmd" "$F_CUSTOM_CMDS")
+					echo Running custom command...
+					search_results=$(
+						if command -v "gum" >/dev/null 2>&1; then
+							gum spin --show-output --show-error -- $custom_yt_dlp_cmd || send_notification "Failed to fetch data : ("
+						else
+							echo "Loading..." >/dev/stderr
+							$custom_yt_dlp_cmd || send_notification "Failed to fetch data : ("
+						fi
+					)
+					playlist_explorer
+				done
+				;;
 			Edit\ Search\ History)
 				if command -v "$EDITOR" >/dev/null 2>&1; then
 					$EDITOR "$CLI_CACHE_DIR/search_history.txt"
@@ -1289,6 +1337,18 @@ ${RED}󰈆${RESET}  Exit
 					send_notification "Could not find editor env ($EDITOR) or xdg-open or open"
 				fi
 				;;
+			Edit\ Custom\ Commands)
+				if command -v "$EDITOR" >/dev/null 2>&1; then
+					$EDITOR "$F_CUSTOM_CMDS"
+				elif command -v "open" >/dev/null 2>&1; then
+					open "$F_CUSTOM_CMDS"
+				elif command -v "xdg-open" >/dev/null 2>&1; then
+					xdg-open "$F_CUSTOM_CMDS"
+				else
+					send_notification "Could not find editor env ($EDITOR) or xdg-open or open"
+				fi
+				;;
+
 			Edit\ MPV\ Config)
 				if command -v "$EDITOR" >/dev/null 2>&1; then
 					$EDITOR "$HOME/.config/mpv/mpv.conf"
