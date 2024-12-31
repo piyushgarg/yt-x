@@ -9,7 +9,7 @@
 Browse YouTube from your terminal.
 Plus other sites yt-dlp supports.
 
-[yt-x.webm](https://github.com/user-attachments/assets/d4aa3329-c009-4625-84a6-390519595648)
+[yt-x-github-demo.webm](https://github.com/user-attachments/assets/08e491cc-fc91-4f13-849b-6ce8e78bf6f0)
 
 <details>
 <summary>Workflow Demo</summary>
@@ -127,10 +127,12 @@ PREFERRED_BROWSER: firefox
 To enable `mpv` to access private playlists and videos, add something like this to `mpv.conf` (you can also use the ui to edit `mpv.conf`):
 
 ```ini
-ytdl-format="bestvideo[vcodec^=avc1][height=1080]+bestaudio/best[vcodec^=avc1][height=1080]/bestvideo[vcodec^=avc1][height=720]+bestaudio/best[vcodec^=avc1][height=720]/best"
 ytdl-raw-options=cookies-from-browser=firefox
 
 # --- bonus mpv tips ---
+
+# define the quality for mpv to use
+ytdl-format="bestvideo[vcodec^=avc1][height=1080]+bestaudio/best[vcodec^=avc1][height=1080]/bestvideo[vcodec^=avc1][height=720]+bestaudio/best[vcodec^=avc1][height=720]/best"
 
 # defines where screenshots will be saved
 screenshot-directory=~/Pictures/mpv_screenshots/
