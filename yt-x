@@ -1151,12 +1151,12 @@ ${RED}󰈆${RESET}  Exit
 		;;
 	"Saved Videos")
 		! [ -s "$CLI_CONFIG_DIR/saved_videos.json" ] && echo No saved videos && sleep "$NOTIFICATION_DURATION" && main
-		search_results=$(cat "$CLI_CONFIG_DIR/saved_videos.json")
+		search_results=$(jq '{"entries":.entries|reverse}' "$CLI_CONFIG_DIR/saved_videos.json")
 		playlist_explorer
 		;;
 	Recent)
 		! [ -s "$CLI_CONFIG_DIR/recent.json" ] && echo No recent videos && sleep "$NOTIFICATION_DURATION" && main
-		search_results=$(cat "$CLI_CONFIG_DIR/recent.json" | jq '{"entries":.entries|reverse}')
+		search_results=$(jq '{"entries":.entries|reverse}' "$CLI_CONFIG_DIR/recent.json")
 		playlist_explorer
 		;;
 	Channels)
