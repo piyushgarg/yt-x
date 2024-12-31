@@ -121,14 +121,37 @@ yt-x --help
 Set your preferred browser in the configuration file:
 
 ```ini
-PREFERRED_BROWSER: chrome
+PREFERRED_BROWSER: firefox
 ```
 
-To enable `mpv` to access private playlists and videos, add this to `mpv.conf`:
+To enable `mpv` to access private playlists and videos, add something like this to `mpv.conf` (you can also use the ui to edit `mpv.conf`):
 
 ```ini
-ytdl-raw-options=cookies-from-browser=chrome
-ytdl-format="best[height=1080]/bestvideo[height=1080]+bestaudio/best[height=720]/bestvideo[height=720]+bestaudio/best"
+ytdl-format="bestvideo[vcodec^=avc1][height=1080]+bestaudio/best[vcodec^=avc1][height=1080]/bestvideo[vcodec^=avc1][height=720]+bestaudio/best[vcodec^=avc1][height=720]/best"
+ytdl-raw-options=cookies-from-browser=firefox
+
+# --- bonus mpv tips ---
+
+# defines where screenshots will be saved
+screenshot-directory=~/Pictures/mpv_screenshots/
+
+# enable hardware accelaration
+hwdec=auto
+vo=gpu
+```
+
+To customise download options with yt-dlp you can add something like this to `yt-dlp.conf` (you can also use the ui to edit `yt-dlp.conf`)
+
+```bash
+-f bestvideo[vcodec^=avc1][height=1080]+bestaudio/best[vcodec^=avc1][height=1080]/bestvideo[vcodec^=avc1][height=720]+bestaudio/best[vcodec^=avc1][height=720]/best
+--embed-chapters
+--sponsorblock-mark all
+--embed-metadata
+--embed-thumbnail
+--add-metadata
+--embed-subs
+--sub-lang en
+--merge-output-format mkv
 ```
 
 For additional enhancements, consider:
