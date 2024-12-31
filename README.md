@@ -47,6 +47,7 @@ https://www.reddit.com/r/unixporn/comments/1hou2s7/oc_ytx_v040_workflow_new_year
 # NixOS
 nix profile install github:Benexl/yt-x
 
+# cross-platform
 # NOTE: ~/.local/bin should exist and be in path for this to work
 curl -sL "https://raw.githubusercontent.com/Benexl/yt-x/refs/heads/master/yt-x" -o ~/.local/bin/yt-x && chmod +x ~/.local/bin/yt-x
 ```
