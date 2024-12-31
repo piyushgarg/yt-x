@@ -927,6 +927,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 				export url urlForAll search_results video video_url playlist_title CLI_HEADER CLI_NAME DOWNLOAD_DIRECTORY
 				bash --rcfile <(
 					cat <<'EOF'
+[ -f ~/.bashrc ] && . ~/.bashrc
 clear
 echo "$CLI_HEADER"
 echo "Welcome to the $CLI_NAME shell."
@@ -938,7 +939,6 @@ echo "  - video"
 echo "  - video_url"
 echo "  - playlist_title"
 echo "  - DOWNLOAD_DIRECTORY"
-[ -f ~/.bashrc ] && . ~/.bashrc
 EOF
 				)
 				;;
