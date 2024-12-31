@@ -14,8 +14,10 @@ Inspired by [magic-tape](https://gitlab.com/christosangel/magic-tape)
 [yt-x-github-demo.webm](https://github.com/user-attachments/assets/08e491cc-fc91-4f13-849b-6ce8e78bf6f0)
 
 <details>
-<summary>Workflow Demo</summary>
-https://www.reddit.com/r/unixporn/comments/1hou2s7/oc_ytx_v040_workflow_new_year_new_way_to_explore/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
+<summary>Full Demo</summary>
+  
+[yt-x-full-github-demo.webm](https://github.com/user-attachments/assets/06e388c4-4399-4358-a6cc-68045db48177)
+
 </details>
 
 ## Features
@@ -28,6 +30,7 @@ https://www.reddit.com/r/unixporn/comments/1hou2s7/oc_ytx_v040_workflow_new_year
 - **Saved Channels**: Bookmark your favorite channels for quick access, with support for importing existing subscriptions.
 - **Saved Videos**: Save videos to watch later.
 - **Mixes**: Generate and explore YouTube song mixes.
+- **Yt-x Shell:** Run custom yt-dlp and mpv commands for downloading and viewing videos and playlists
 - **Custom Playlists**: Save playlists for easier access.
 - **Download Management**: Download videos, audio, and playlists using `yt-dlp`.
 - **History & Recents**: Track your recent videos and search history.
@@ -84,6 +87,11 @@ yt-x
 
 # Edit configuration
 yt-x -e
+
+# load an extension
+# extensions are located at ~/.config/yt-x/extensions
+# the extension name is the name of a file in the extensions folder
+yt-x -x <extension-name>
 
 # Specify player at runtime
 yt-x --player <mpv/vlc>
