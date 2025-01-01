@@ -103,15 +103,21 @@ curl -sL "https://raw.githubusercontent.com/Benexl/yt-x/refs/heads/master/yt-x" 
 - [mpv](https://mpv.io/) - Video and audio playback.
 - [ffmpeg](https://www.ffmpeg.org/) - Proper HLS stream downloading.
 - [bash](https://www.gnu.org/software/bash/) - Script interpreter.
+- [nerdfont](https://www.nerdfonts.com/) - for the icons
 
 ### Optional
 
 - [gum](https://github.com/charmbracelet/gum) - Enhanced UI (highly recommended).
-- [chafa](https://github.com/hpjansson/chafa) - Cross-terminal image rendering (highly recommended).
-- [icat](https://sw.kovidgoyal.net/kitty/) - Image rendering.
-- [imgcat](https://github.com/danielgatis/imgcat) - Image rendering.
 - [rofi](https://github.com/davatorium/rofi) - Alternate UI.
-
+- **terminal image viewer:**
+  - [chafa](https://github.com/hpjansson/chafa) - Cross-terminal image rendering (recommended).
+  - [icat](https://sw.kovidgoyal.net/kitty/kittens/icat/) - recommended for kitty terminal and ghostty
+  - [imgcat](https://github.com/danielgatis/imgcat)
+- **terminal with image rendering support:**
+  - [kitty](https://sw.kovidgoyal.net/kitty/) - currently has the best image rendering capabilities (recommended)
+  - [wezterm](https://wezfurlong.org/wezterm/index.html)
+  - [ghostty](https://github.com/ghostty-org/ghostty)
+   
 ---
 
 ## Usage
