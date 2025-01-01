@@ -145,6 +145,7 @@ load_config() {
 	ROFI_THEME="$(awk -F': ' '/^ROFI_THEME:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	CUSTOM_PLAYLISTS="$CLI_CONFIG_DIR/custom_playlists.json"
 	F_CUSTOM_CMDS="$CLI_CONFIG_DIR/custom_cmds.json"
+	F_SUBSCRIPTIONS="$CLI_CONFIG_DIR/subscriptions.json"
 	PLAYLIST_START="1"
 	PLAYLIST_END="$NO_OF_SEARCH_RESULTS"
 
@@ -964,7 +965,7 @@ get_channels_data() {
 		channels_data=$(cat "$CLI_CONFIG_DIR/subscriptions.json")
 	else
 		echo Loading subscriptions...
-		channels_data=$(yt-dlp "https://www.youtube.com/feed/channels" --flat-playlist $PREFERRED_BROWSER -J)
+		[ -n "$PREFERRED_BROWSER" ] && channels_data=$(yt-dlp "https://www.youtube.com/feed/channels" --flat-playlist $PREFERRED_BROWSER -J) || send_notification "Failed to fetch subscriptions (please set preferred browser in config"
 		! [ "$FORCE_CHANNEL_THUMBNAILS_DOWNLOAD" = "0" ] && [ "$ENABLE_PREVIEW" = "true" ] && download_preview_images "$channels_data" "https:"
 		[ -n "$channels_data" ] && ! [ "$channels_data" = "null" ] && echo "$channels_data" >"$CLI_CONFIG_DIR/subscriptions.json" || send_notification "Failed to fetch subscriptions"
 		clear
@@ -1228,6 +1229,7 @@ ${CYAN}󰤀${RESET}  Edit Custom Playlists
 ${CYAN}󱄢${RESET}  Edit MPV Config
 ${CYAN}󰮆${RESET}  Edit yt-dlp Config
 ${CYAN}󱘫${RESET}  Edit Custom Commands
+${CYAN}󰓦${RESET}  Sync YouTube Subscriptions
 ${RED}󰆴${RESET}  Clear Search History
 ${RED}${RESET}  Back
 ${RED}󰈆${RESET}  Exit
@@ -1375,6 +1377,16 @@ ${RED}󰈆${RESET}  Exit
 				;;
 			Clear\ Search\ History)
 				confirm "Are you sure you want to clear your search history ($CLI_CACHE_DIR/search_history.txt)" && rm "$CLI_CACHE_DIR/search_history.txt"
+				;;
+			Sync\ YouTube\ Subscriptions)
+				if confirm "This will erase your local subs, are you sure you wish to proceed"; then
+					echo "Syncing subscriptions..."
+					[ -n "$PREFERRED_BROWSER" ] && channels_data=$(yt-dlp "https://www.youtube.com/feed/channels" --flat-playlist $PREFERRED_BROWSER -J) || send_notification "Failed to fetch subscriptions (please set preferred browser in config"
+					download_preview_images "$channels_data" "https:"
+					[ -n "$channels_data" ] && ! [ "$channels_data" = "null" ] && echo "$channels_data" >"$CLI_CONFIG_DIR/subscriptions.json" && send_notification "successfully imported yt subs" || send_notification "Failed to fetch subscriptions"
+				else
+					send_notification "Sync cancelled"
+				fi
 				;;
 			Back)
 				break
