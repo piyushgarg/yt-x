@@ -44,6 +44,12 @@ print_config() {
 #    ░░░╚═╝░░░░░░╚═╝░░░░░░░░░╚═╝░░╚═╝  ░╚════╝░░╚════╝░╚═╝░░╚══╝╚═╝░░░░░╚═╝░╚═════╝░
 #
 
+# loads the extension always
+# useful for defining changes and overides to the default behaviour
+# eg env,ui,functions
+# all file names in the extensions folder
+AUTO_LOADED_EXTENSIONS: $AUTO_LOADED_EXTENSIONS
+
 # whether to show colors when printing ouput
 PRETTY_PRINT: $PRETTY_PRINT
 
@@ -140,8 +146,6 @@ load_config() {
 	[ -z "$DOWNLOAD_DIRECTORY" ] && DOWNLOAD_DIRECTORY="$HOME/Videos/$CLI_NAME"
 	[ -d "$DOWNLOAD_DIRECTORY" ] || mkdir -p "$DOWNLOAD_DIRECTORY"
 
-	! [ -s "$CLI_CONFIG_DIR/${CLI_NAME}.conf" ] && print_config >"$CLI_CONFIG_DIR/${CLI_NAME}.conf"
-
 	ROFI_THEME="$(awk -F': ' '/^ROFI_THEME:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
 	CUSTOM_PLAYLISTS="$CLI_CONFIG_DIR/custom_playlists.json"
 	F_CUSTOM_CMDS="$CLI_CONFIG_DIR/custom_cmds.json"
@@ -158,6 +162,13 @@ load_config() {
     --marker=">" --pointer="◆" --separator="─" --scrollbar="│"
   '}
 	init_pretty_print
+	AUTO_LOADED_EXTENSIONS="$(awk -F': ' '/^AUTO_LOADED_EXTENSIONS:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
+	if [ -n "$AUTO_LOADED_EXTENSIONS" ]; then
+		for ext in $(echo "$AUTO_LOADED_EXTENSIONS" | tr ',' '\n'); do
+			[ -s "$CLI_EXTENSION_DIR/$ext" ] && . "$CLI_EXTENSION_DIR/$ext"
+		done
+	fi
+	! [ -s "$CLI_CONFIG_DIR/${CLI_NAME}.conf" ] && print_config >"$CLI_CONFIG_DIR/${CLI_NAME}.conf"
 	export FZF_DEFAULT_OPTS PRETTY_PRINT PLATFORM IMAGE_RENDERER
 }
 send_notification() {
