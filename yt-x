@@ -1187,7 +1187,7 @@ ${RED}󰈆${RESET}  Exit
 	Custom\ Playlists)
 		! [ -s "$CUSTOM_PLAYLISTS" ] && echo "You dont have any custom playlists create them here <$CUSTOM_PLAYLISTS>" && sleep "$NOTIFICATION_DURATION" && main
 		while true; do
-			playlist_title=$(printf "%s\nBack" "$(jq -r '.[].name' "$CUSTOM_PLAYLISTS")" | launcher "Select Custom Playlist To Play")
+			playlist_title=$(printf "%s\nBack" "$(jq -r '.|reverse|.[].name' "$CUSTOM_PLAYLISTS")" | launcher "Select Custom Playlist To Play")
 			[ "$playlist_title" = "Back" ] && break
 			url=$(jq -r ". | map(select(.name == \"$playlist_title\" )) | .[0].playlistWatchUrl" "$CUSTOM_PLAYLISTS")
 			urlForAll=$(jq -r ". | map(select(.name == \"$playlist_title\" )) | .[0].playlistUrl" "$CUSTOM_PLAYLISTS")
