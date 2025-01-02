@@ -1280,11 +1280,14 @@ ${RED}󰈆${RESET}  Exit
 				;;
 			Search\ History)
 				clear
-				! [ -s "$CLI_CACHE_DIR/search_history.txt" ] && echo "No search history or disabed" && sleep "$NOTIFICATION_DURATION" && main
-				search_term="$(tac "$CLI_CACHE_DIR/search_history.txt" | launcher "Search for" | jq -Rr '@uri')"
-				url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAQ%253D%253D"
-				search_results=$(run_yt_dlp "$url")
-				playlist_explorer
+				while true; do
+					! [ -s "$CLI_CACHE_DIR/search_history.txt" ] && echo "No search history or disabed" && sleep "$NOTIFICATION_DURATION" && main
+					search_term="$(printf "$(tac "$CLI_CACHE_DIR/search_history.txt")\nBack" | launcher "Search for" | jq -Rr '@uri')"
+					[ "$search_term" = "Back" ] && break
+					url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAQ%253D%253D"
+					search_results=$(run_yt_dlp "$url")
+					playlist_explorer
+				done
 				;;
 			New\ Custom\ Command)
 				clear
