@@ -767,17 +767,17 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
 			"Download All")
 				playlist_name=$(prompt "Name of the playlist" "$playlist_title")
 				if [ -n "$urlForAll" ]; then
-					yt-dlp "$urlForAll" --output "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+					yt-dlp "$urlForAll" --output "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER
 				else
-					yt-dlp "$url" --output "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+					yt-dlp "$url" --output "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER
 				fi
 				;;
 			"Download All (Audio Only)")
 				playlist_name=$(prompt "Name of the playlist" "$playlist_title")
 				if [ -n "$urlForAll" ]; then
-					yt-dlp "$urlForAll" -x -f 'bestaudio/best' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/$playlist_name/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+					yt-dlp "$urlForAll" -x -f 'bestaudio/best' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER
 				else
-					yt-dlp "$url" -x -f 'bestaudio/best' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/$playlist_name/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+					yt-dlp "$url" -x -f 'bestaudio/best' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER
 				fi
 				;;
 			Listen)
