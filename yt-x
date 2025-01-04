@@ -872,6 +872,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
         echo "$current_recent_videos" | jq "{\"entries\":[.entries[] | select(.id != \"$id\")]}|.entries+=[$(echo "$video" | jq '.title |= sub("^[0-9]+ "; "")')]" | jq "{\"entries\":.entries[-$NO_OF_RECENT:]}" >"$CLI_CONFIG_DIR/recent.json"
         ;;
       Mix)
+        local url0 _search_results
         video_id=$(echo "$video" | jq '.id' -r)
         url0=$urlForAll
         urlForAll="https://www.youtube.com/watch?v=${video_id}&list=RD$video_id"
