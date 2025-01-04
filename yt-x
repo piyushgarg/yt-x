@@ -305,6 +305,30 @@ launcher() {
   esac
 
 }
+
+generate_sha256() {
+  local input
+
+  # Check if input is passed as an argument or piped
+  if [ -n "$1" ]; then
+    input="$1"
+  else
+    input=$(cat)
+  fi
+
+  if command -v sha256sum &>/dev/null; then
+    echo -n "$input" | sha256sum | awk '{print $1}'
+  elif command -v shasum &>/dev/null; then
+    echo -n "$input" | shasum -a 256 | awk '{print $1}'
+  elif command -v sha256 &>/dev/null; then
+    echo -n "$input" | sha256 | awk '{print $1}'
+  elif command -v openssl &>/dev/null; then
+    echo -n "$input" | openssl dgst -sha256 | awk '{print $2}'
+  else
+    echo -n "$input" | base64 | tr '/+' '_-' | tr -d '\n'
+  fi
+}
+
 generate_text_preview() {
   [ -z "$search_results" ] && return 1
   echo "Generating preview text..."
@@ -315,7 +339,7 @@ generate_text_preview() {
     video=$(echo "$1" | jq ".entries[$((i - 1))]")
     title=$(echo "$video" | jq ".title" -r | sed 's/"/\\\\"/g;s/%/%%/g;s/\$/\\\\$/g;s/^.. //g')
     id=$(echo "$video" | jq '.id' -r)
-    preview_image=$(echo "$video" | jq '.thumbnails[-1].url' -r | base64 | tr '/+' '_-' | tr -d '\n')
+    preview_image=$(echo "$video" | jq '.thumbnails[-1].url' -r | generate_sha256)
 
     view_count=$(
       echo "$video" | jq -r '
@@ -439,7 +463,7 @@ echo
 
 ! [ \"$description\" = \"null\" ] && echo -n \"%s\";
 
-" "$description" >"$CLI_PREVIEW_SCRIPTS_DIR/$(echo "$video" | jq ".title" -r | base64 | tr '/+' '_-').txt"
+" "$description" >"$CLI_PREVIEW_SCRIPTS_DIR/$(echo "$video" | jq ".title" -r | generate_sha256).txt"
 
   done
 }
@@ -458,7 +482,7 @@ download_preview_images() {
   for i in $(seq 1 "$lines"); do
     video=$(echo "$1" | jq ".entries[$((i - 1))]")
     url=$(echo "$urls" | head -n $i | tail -n 1)
-    filename=$(echo "$url" | base64 | tr '/+' '_-' | tr -d '\n')
+    filename=$(echo "$url" | generate_sha256)
     if ! [ -s "$CLI_PREVIEW_IMAGES_CACHE_DIR/${filename}.jpg" ]; then
       echo "url = \"${2}${url}\"" >>"$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt"
       echo "output = \"$CLI_PREVIEW_IMAGES_CACHE_DIR/${filename}.jpg\"" >>"$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt"
@@ -535,7 +559,7 @@ PREVIEW_SCRIPT_FOR_VIDEOS="
   $fzf_preview
 
   title={}
-  id=\$(echo {} | base64 | tr '/+' '_-')
+  id=\$(echo {} | generate_sha256)
   if  [ -f \"$CLI_PREVIEW_SCRIPTS_DIR/\${id}.txt\" ];then
     . \"$CLI_PREVIEW_SCRIPTS_DIR/\${id}.txt\";
   else
@@ -554,7 +578,7 @@ PREVIEW_SCRIPT_FOR_CHANNELS="
     title=\"\$(echo {}|sed 's/\"/\\\\\\\"/g')\"
     video=\$(echo \"\$channels_data\" | jq -r \".entries | map(select(.title == \\\"\$title\\\" )) | .[0]\" 2>/dev/null)
 
-    id=\$(echo \$video |jq '.thumbnails[-1].url' -r | base64 | tr '/+' '_-' | tr -d '\n');
+    id=\$(echo \$video |jq '.thumbnails[-1].url' -r | generate_sha256);
 
     channel=\$(echo \"\$video\"| jq '.channel' -r);
 
@@ -603,7 +627,7 @@ PREVIEW_SCRIPT_FOR_CHANNELS_EXPLORER="
     title=\"\$(echo {}|sed 's/\"/\\\\\\\"/g')\"
     video=\$(echo \"\$channels_data\" | jq -r \".entries | map(select(.title == \\\"\$title\\\" )) | .[0]\" 2>/dev/null)
 
-    id=\$(echo \$video | jq '.thumbnails[-1].url' -r | base64 | tr '/+' '_-' | tr -d '\n');   
+    id=\$(echo \$video | jq '.thumbnails[-1].url' -r | generate_sha256);   
 
     channel=\$(echo \"\$video\"| jq '.channel' -r);
 
@@ -652,7 +676,7 @@ PREVIEW_SCRIPT_FOR_PLAYLISTS_EXPLORER="
     video=\$(echo \"\$playlist_results\" | jq -r \".entries | map(select(.title == \\\"\$title\\\" )) | .[0]\" 2>/dev/null)
     title=\"\$(echo \"\$title\"|sed 's/^.. //g')\"
 
-    id=\$(echo \$video | jq '.thumbnails[-1].url' -r | base64 | tr '/+' '_-' | tr -d '\n');   
+    id=\$(echo \$video | jq '.thumbnails[-1].url' -r | generate_sha256);   
 
     
     if [ -f \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" ];then fzf_preview \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" 2>/dev/null;
@@ -1670,4 +1694,8 @@ if ((current_time - last_check_time >= interval)); then
   echo "$current_time" >"$timestamp_file"
 fi
 core_dep_ch
+
+# exports
+export -f generate_sha256
+
 main
