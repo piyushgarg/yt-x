@@ -944,7 +944,11 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
         custom_playlists="[]"
         [ -s "$CLI_CONFIG_DIR/custom_playlists.json" ] && custom_playlists=$(cat "$CLI_CONFIG_DIR/custom_playlists.json")
         playlist_name=$(prompt "Enter the name of the playlist" "$playlist_title")
-        playlist_id=$(echo "$url" | sed 's/.*list=//g')
+        if [ -n "$urlForAll" ]; then
+          playlist_id=$(echo "$urlForAll" | sed 's/.*list=//g')
+        else
+          playlist_id=$(echo "$url" | sed 's/.*list=//g')
+        fi
         custom_playlist="
           {
             \"name\": \"$playlist_name\",
