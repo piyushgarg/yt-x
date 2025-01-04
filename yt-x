@@ -20,11 +20,13 @@ CLI_CONFIG_DIR="$HOME/.config/$CLI_NAME"
 CLI_EXTENSION_DIR="$CLI_CONFIG_DIR/extensions"
 CLI_CACHE_DIR="$HOME/.cache/$CLI_NAME"
 CLI_PREVIEW_IMAGES_CACHE_DIR="$CLI_CACHE_DIR/preview_images"
+CLI_YT_DLP_ARCHIVE="$CLI_CACHE_DIR/yt-dlp-archive"
 CLI_PREVIEW_SCRIPTS_DIR="$CLI_CACHE_DIR/preview_text"
 [ -d "$CLI_CONFIG_DIR" ] || mkdir -p "$CLI_CONFIG_DIR"
 [ -d "$CLI_EXTENSION_DIR" ] || mkdir -p "$CLI_EXTENSION_DIR"
 [ -d "$CLI_PREVIEW_IMAGES_CACHE_DIR" ] || mkdir -p "$CLI_PREVIEW_IMAGES_CACHE_DIR"
 [ -d "$CLI_PREVIEW_SCRIPTS_DIR" ] || mkdir -p "$CLI_PREVIEW_SCRIPTS_DIR"
+[ -d "$CLI_YT_DLP_ARCHIVE" ] || mkdir -p "$CLI_YT_DLP_ARCHIVE"
 
 case "$(uname -a)" in
 *ndroid) PLATFORM="android" ;;
@@ -331,7 +333,6 @@ generate_sha256() {
 
 generate_text_preview() {
   [ -z "$search_results" ] && return 1
-  echo "Generating preview text..."
   ids="$(echo "$1" | jq '.entries[].id' -r 2>/dev/null)"
 
   lines="$(echo "$ids" | wc -l)"
@@ -488,7 +489,7 @@ download_preview_images() {
       echo "output = \"$CLI_PREVIEW_IMAGES_CACHE_DIR/${filename}.jpg\"" >>"$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt"
     fi
   done
-  curl -s -K "$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt" &
+  curl -s -K "$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt" 2>/dev/null &
 }
 launcher_with_preview() {
   case "$PREFERRED_SELECTOR" in
@@ -799,17 +800,22 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
       "Download All")
         playlist_name=$(prompt "Name of the playlist" "$playlist_title")
         if [ -n "$urlForAll" ]; then
-          yt-dlp "$urlForAll" --output "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER
+          yt_dlp_cmd=("yt-dlp" "$urlForAll" "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER)
+          "${yt_dlp_cmd[@]}" --download-archive "$CLI_YT_DLP_ARCHIVE/$(echo -n -- "${yt_dlp_cmd[@]}" | generate_sha256)"
         else
-          yt-dlp "$url" --output "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER
+          yt_dlp_cmd=("yt-dlp" "$url" "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER)
+          "${yt_dlp_cmd[@]}" --download-archive "$CLI_YT_DLP_ARCHIVE/$(echo -n -- "${yt_dlp_cmd[@]}" | generate_sha256)"
         fi
         ;;
       "Download All (Audio Only)")
         playlist_name=$(prompt "Name of the playlist" "$playlist_title")
+
         if [ -n "$urlForAll" ]; then
-          yt-dlp "$urlForAll" -x -f 'bestaudio/best' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER
+          yt_dlp_cmd=("yt-dlp" "$urlForAll" '-x' '-f' 'bestaudio/best' "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER)
+          "${yt_dlp_cmd[@]}" --download-archive "$CLI_YT_DLP_ARCHIVE/$(echo -n -- "${yt_dlp_cmd[@]}" | generate_sha256)"
         else
-          yt-dlp "$url" -x -f 'bestaudio/best' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER
+          yt_dlp_cmd=("yt-dlp" "$url" '-x' '-f' 'bestaudio/best' "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER)
+          "${yt_dlp_cmd[@]}" --download-archive "$CLI_YT_DLP_ARCHIVE/$(echo -n -- "${yt_dlp_cmd[@]}" | generate_sha256)"
         fi
         ;;
       Listen)
