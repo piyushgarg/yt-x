@@ -21,12 +21,14 @@ CLI_EXTENSION_DIR="$CLI_CONFIG_DIR/extensions"
 CLI_CACHE_DIR="$HOME/.cache/$CLI_NAME"
 CLI_PREVIEW_IMAGES_CACHE_DIR="$CLI_CACHE_DIR/preview_images"
 CLI_YT_DLP_ARCHIVE="$CLI_CACHE_DIR/yt-dlp-archive"
+CLI_AUTO_GEN_PLAYLISTS="$CLI_CACHE_DIR/playlists"
 CLI_PREVIEW_SCRIPTS_DIR="$CLI_CACHE_DIR/preview_text"
 [ -d "$CLI_CONFIG_DIR" ] || mkdir -p "$CLI_CONFIG_DIR"
 [ -d "$CLI_EXTENSION_DIR" ] || mkdir -p "$CLI_EXTENSION_DIR"
 [ -d "$CLI_PREVIEW_IMAGES_CACHE_DIR" ] || mkdir -p "$CLI_PREVIEW_IMAGES_CACHE_DIR"
 [ -d "$CLI_PREVIEW_SCRIPTS_DIR" ] || mkdir -p "$CLI_PREVIEW_SCRIPTS_DIR"
 [ -d "$CLI_YT_DLP_ARCHIVE" ] || mkdir -p "$CLI_YT_DLP_ARCHIVE"
+[ -d "$CLI_AUTO_GEN_PLAYLISTS" ] || mkdir -p "$CLI_AUTO_GEN_PLAYLISTS"
 
 case "$(uname -a)" in
 *ndroid) PLATFORM="android" ;;
@@ -770,9 +772,13 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
       "Play All")
         if echo "$url" | grep -q "list=RD" || echo "$urlForAll" | grep -q "list=RD" || [ "$(echo "$search_results" | jq 'has("uploader_url") | not')" = "true" ]; then
           if [ -n "$urlForAll" ]; then
-            mpv $(yt-dlp "$urlForAll" --flat-playlist -J | jq '.entries[].url' -r)
+            cached_playlist="$CLI_AUTO_GEN_PLAYLISTS/$(generate_sha256 "$urlForAll").m3u8"
+            [ -s "$cached_playlist" ] || yt-dlp "$urlForAll" --flat-playlist -J | jq '.entries[].url' -r >"$cached_playlist"
+            mpv "$cached_playlist"
           else
-            mpv $(yt-dlp "$url" --flat-playlist -J | jq '.entries[].url' -r)
+            cached_playlist="$CLI_AUTO_GEN_PLAYLISTS/$(generate_sha256 "$url").m3u8"
+            [ -s "$cached_playlist" ] || yt-dlp "$url" --flat-playlist -J | jq '.entries[].url' -r >"$cached_playlist"
+            mpv "$cached_playlist"
           fi
         else
           if [ -n "$urlForAll" ]; then
@@ -785,9 +791,13 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
       "Listen To All")
         if echo "$url" | grep -q "list=RD" || echo "$urlForAll" | grep -q "list=RD" || [ "$(echo "$search_results" | jq 'has("uploader_url") | not')" = "true" ]; then
           if [ -n "$urlForAll" ]; then
-            mpv $(yt-dlp "$urlForAll" --flat-playlist -J | jq '.entries[].url' -r) --no-video
+            cached_playlist="$CLI_AUTO_GEN_PLAYLISTS/$(generate_sha256 "$urlForAll").m3u8"
+            [ -s "$cached_playlist" ] || yt-dlp "$urlForAll" --flat-playlist -J | jq '.entries[].url' -r >"$cached_playlist"
+            mpv "$cached_playlist" --no-video
           else
-            mpv $(yt-dlp "$url" --flat-playlist -J | jq '.entries[].url' -r) --no-video
+            cached_playlist="$CLI_AUTO_GEN_PLAYLISTS/$(generate_sha256 "$url").m3u8"
+            [ -s "$cached_playlist" ] || yt-dlp "$url" --flat-playlist -J | jq '.entries[].url' -r >"$cached_playlist"
+            mpv "$cached_playlist" --no-video
           fi
         else
           if [ -n "$urlForAll" ]; then
@@ -806,6 +816,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
           yt_dlp_cmd=("yt-dlp" "$url" "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER)
           "${yt_dlp_cmd[@]}" --download-archive "$CLI_YT_DLP_ARCHIVE/$(echo -n -- "${yt_dlp_cmd[@]}" | generate_sha256)"
         fi
+        send_notification "Completed downloading $playlist_name"
         ;;
       "Download All (Audio Only)")
         playlist_name=$(prompt "Name of the playlist" "$playlist_title")
@@ -817,13 +828,16 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
           yt_dlp_cmd=("yt-dlp" "$url" '-x' '-f' 'bestaudio/best' "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER)
           "${yt_dlp_cmd[@]}" --download-archive "$CLI_YT_DLP_ARCHIVE/$(echo -n -- "${yt_dlp_cmd[@]}" | generate_sha256)"
         fi
+        send_notification "Completed downloading $playlist_name"
         ;;
       Listen)
         printf "${MAGENTA}Now Listening to:${RESET} $title\n"
         video_url=$(echo "$video" | jq '.url' -r)
         if echo "$video_url" | grep -q "list=RD"; then
           video_id=$(echo "$video" | jq '.id' -r | sed 's/RD//g')
-          mpv $(yt-dlp "https://www.youtube.com/watch?v=${video_id}&list=RD$video_id" --flat-playlist -J | jq '.entries[].url' -r) --no-video
+          cached_playlist="$CLI_AUTO_GEN_PLAYLISTS/$(generate_sha256 "https://www.youtube.com/watch?v=${video_id}&list=RD$video_id").m3u8"
+          [ -s "$cached_playlist" ] || yt-dlp "https://www.youtube.com/watch?v=${video_id}&list=RD$video_id" --flat-playlist -J | jq '.entries[].url' -r >"$cached_playlist"
+          mpv "$cached_playlist" --no-video
         else
           if ! [ "$PLAYER" = mpv ] || [ "$PLATFORM" = android ]; then
             video_url=$(yt-dlp "$video_url" -q --no-warnings --get-url --format "bestaudio/best[height<=$VIDEO_QUALITY]/best" 2>/dev/null | tail -n 1)
@@ -881,7 +895,10 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
         video_url=$(echo "$video" | jq '.url' -r)
         if echo "$video_url" | grep -q "list=RD"; then
           video_id=$(echo "$video" | jq '.id' -r | sed 's/RD//g')
-          mpv $(yt-dlp "https://www.youtube.com/watch?v=${video_id}&list=RD$video_id" --flat-playlist -J | jq '.entries[].url' -r)
+
+          cached_playlist="$CLI_AUTO_GEN_PLAYLISTS/$(generate_sha256 "https://www.youtube.com/watch?v=${video_id}&list=RD$video_id").m3u8"
+          [ -s "$cached_playlist" ] || yt-dlp "https://www.youtube.com/watch?v=${video_id}&list=RD$video_id" --flat-playlist -J | jq '.entries[].url' -r >"$cached_playlist"
+          mpv "$cached_playlist"
         else
           if ! [ "$PLAYER" = mpv ] || [ "$PLATFORM" = android ]; then
             video_url=$(yt-dlp "$video_url" -q --no-warnings --get-url --format "best[height<=$VIDEO_QUALITY]/best" 2>/dev/null | tail -n 1)
@@ -964,10 +981,12 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
       Download)
         video_url=$(echo "$video" | jq '.url' -r)
         yt-dlp "$video_url" --output "$DOWNLOAD_DIRECTORY/videos/individual/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+        send_notification "Completed downloading $title"
         ;;
       "Download (Audio Only)")
         video_url=$(echo "$video" | jq '.url' -r)
         yt-dlp "$video_url" -x -f 'bestaudio' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/individual/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
+        send_notification "Completed downloading $title"
         ;;
       Back)
         break
