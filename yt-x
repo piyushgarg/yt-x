@@ -472,6 +472,8 @@ echo
 }
 
 download_preview_images() {
+  local url video filename
+
   echo generating preview in the background...
   generate_text_preview "$1" &
 
