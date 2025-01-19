@@ -766,6 +766,7 @@ ${CYAN}󰦗${RESET}  Download All
 ${CYAN}󱑤${RESET}  Download (Audio Only)
 ${CYAN}󰦗${RESET}  Download All (Audio Only)
 ${CYAN}${RESET}  Open in Browser
+${CYAN}${RESET}  Toggle Enumerate Downloads
 ${CYAN}${RESET}  Shell
 ${CYAN}󰌍${RESET}  Back
 ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
@@ -809,13 +810,20 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
           fi
         fi
         ;;
+      "Toggle Enumerate Downloads")
+        if [ "$enumerate_playlist" = "" ]; then
+          enumerate_playlist="%(playlist_index)s - "
+        else
+          enumerate_playlist=""
+        fi
+        ;;
       "Download All")
         playlist_name=$(prompt "Name of the playlist" "$playlist_title")
         if [ -n "$urlForAll" ]; then
-          yt_dlp_cmd=("yt-dlp" "$urlForAll" "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER)
+          yt_dlp_cmd=("yt-dlp" "$urlForAll" "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/$enumerate_playlist%(title)s.%(ext)s" $PREFERRED_BROWSER)
           "${yt_dlp_cmd[@]}" --download-archive "$CLI_YT_DLP_ARCHIVE/$(echo -n -- "${yt_dlp_cmd[@]}" | generate_sha256)"
         else
-          yt_dlp_cmd=("yt-dlp" "$url" "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER)
+          yt_dlp_cmd=("yt-dlp" "$url" "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/$enumerate_playlist%(title)s.%(ext)s" $PREFERRED_BROWSER)
           "${yt_dlp_cmd[@]}" --download-archive "$CLI_YT_DLP_ARCHIVE/$(echo -n -- "${yt_dlp_cmd[@]}" | generate_sha256)"
         fi
         send_notification "Completed downloading $playlist_name"
@@ -824,10 +832,10 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
         playlist_name=$(prompt "Name of the playlist" "$playlist_title")
 
         if [ -n "$urlForAll" ]; then
-          yt_dlp_cmd=("yt-dlp" "$urlForAll" '-x' '-f' 'bestaudio/best' "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER)
+          yt_dlp_cmd=("yt-dlp" "$urlForAll" '-x' '-f' 'bestaudio/best' "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/$enumerate_playlist%(title)s.%(ext)s" $PREFERRED_BROWSER)
           "${yt_dlp_cmd[@]}" --download-archive "$CLI_YT_DLP_ARCHIVE/$(echo -n -- "${yt_dlp_cmd[@]}" | generate_sha256)"
         else
-          yt_dlp_cmd=("yt-dlp" "$url" '-x' '-f' 'bestaudio/best' "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/%(playlist_index)s - %(title)s.%(ext)s" $PREFERRED_BROWSER)
+          yt_dlp_cmd=("yt-dlp" "$url" '-x' '-f' 'bestaudio/best' "--output" "$DOWNLOAD_DIRECTORY/videos/$playlist_name/%(channel)s/$enumerate_playlist%(title)s.%(ext)s" $PREFERRED_BROWSER)
           "${yt_dlp_cmd[@]}" --download-archive "$CLI_YT_DLP_ARCHIVE/$(echo -n -- "${yt_dlp_cmd[@]}" | generate_sha256)"
         fi
         send_notification "Completed downloading $playlist_name"
