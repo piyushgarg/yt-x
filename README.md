@@ -251,6 +251,14 @@ export YT_X_FZF_OPTS=$FZF_DEFAULT_OPTS'
 --border="rounded" --border-label="" --preview-window="border-rounded" --prompt="> "
 --marker=">" --pointer="◆" --separator="─" --scrollbar="│"'
 ```
+
+# Other Terminal Browsers I Made
+[lib-x](https://github.com/Benexl/lib-x) - browse your calibre library from the terminal
+
+[fastanime](https://github.com/Benexl/FastAnime) - browse anime from the terminal
+
+
+
 ## Contribution
 
 Pull requests are highly welcome!
