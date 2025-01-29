@@ -277,4 +277,6 @@ Need help? Join the community on Discord:
 
 Give the project a star and consider contributing to the codebase.
 
+[![upwork](https://img.shields.io/badge/Upwork-05122A?style=flat&logo=upwork)](https://www.upwork.com/freelancers/~0165dbc694969774ed?viewMode=1)
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y8ZAA7N)
