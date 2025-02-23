@@ -1320,30 +1320,29 @@ main() {
   SHELL="bash"
   clear
   case "${CMD_ACTION}" in
-    Search)
-      unset CMD_ACTION
-      action="Search"
-      ;;
-    *)
-      action="$(printf "\
-    ${CYAN}${RESET}  Your Feed
-    ${CYAN}${RESET}  Trending
-    ${CYAN}󰐑${RESET}  Playlists
-    ${CYAN}${RESET}  Search
-    ${CYAN}${RESET}  Watch Later
-    ${CYAN}󰵀${RESET}  Subscription Feed
-    ${CYAN}󰑈${RESET}  Channels
-    ${CYAN}${RESET}  Custom Playlists
-    ${CYAN}${RESET}  Liked Videos
-    ${CYAN}${RESET}  Saved Videos
-    ${CYAN}${RESET}  Watch History
-    ${CYAN}${RESET}  Recent
-    ${CYAN}${RESET}  Clips
-    ${CYAN}${RESET}  Edit Config
-    ${CYAN}${RESET}  Miscellaneous
-    ${RED}󰈆${RESET}  Exit
-    " | launcher "Select Action" | sed 's/.*  //g')"
-  ;;
+  Search)
+    unset CMD_ACTION
+    action="Search"
+    ;;
+  *)
+    action="$(printf "\
+${CYAN}${RESET}  Your Feed
+${CYAN}${RESET}  Trending
+${CYAN}󰐑${RESET}  Playlists
+${CYAN}${RESET}  Search
+${CYAN}${RESET}  Watch Later
+${CYAN}󰵀${RESET}  Subscription Feed
+${CYAN}󰑈${RESET}  Channels
+${CYAN}${RESET}  Custom Playlists
+${CYAN}${RESET}  Liked Videos
+${CYAN}${RESET}  Saved Videos
+${CYAN}${RESET}  Watch History
+${CYAN}${RESET}  Recent
+${CYAN}${RESET}  Clips
+${CYAN}${RESET}  Edit Config
+${CYAN}${RESET}  Miscellaneous
+${RED}󰈆${RESET}  Exit" | launcher "Select Action" | sed 's/.*  //g')"
+    ;;
   esac
   [ "$action" = "Exit" ] && byebye
 
