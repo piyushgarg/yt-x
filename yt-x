@@ -1366,7 +1366,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Action" | sed 's/.*  //g')"
     clear
     if [ -z "$CMD_SEARCH_TERMS" ]; then
            search_term="$(prompt "Enter term to search for")"
-      # Exit if user submits an empty search term in rofi
+      # Exit if user presses ESC or leaves search empty in rofi
       if [ "$PREFERRED_SELECTOR" = "rofi" ] && [ -z "$search_term" ]; then
         echo "Search canceled. No search term provided."
         return 1
