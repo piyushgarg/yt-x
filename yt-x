@@ -100,6 +100,9 @@ NOTIFICATION_DURATION: $NOTIFICATION_DURATION
 
 # where your downloads will be stored
 DOWNLOAD_DIRECTORY: $DOWNLOAD_DIRECTORY
+
+# whether to check for updates [true/false]
+UPDATE_CHECK: $UPDATE_CHECK
 "
 }
 load_config() {
@@ -149,6 +152,9 @@ load_config() {
   DOWNLOAD_DIRECTORY="$(awk -F': ' '/^DOWNLOAD_DIRECTORY:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
   [ -z "$DOWNLOAD_DIRECTORY" ] && DOWNLOAD_DIRECTORY="$HOME/Videos/$CLI_NAME"
   [ -d "$DOWNLOAD_DIRECTORY" ] || mkdir -p "$DOWNLOAD_DIRECTORY"
+
+  UPDATE_CHECK="$(awk -F': ' '/^UPDATE_CHECK:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
+  [ -z "$UPDATE_CHECK" ] && UPDATE_CHECK="true"
 
   ROFI_THEME="$(awk -F': ' '/^ROFI_THEME:/ && !/#/ {print $2}' "$CLI_CONFIG_DIR/${CLI_NAME}.conf")"
   CUSTOM_PLAYLISTS="$CLI_CONFIG_DIR/custom_playlists.json"
@@ -1880,19 +1886,22 @@ Example:
   shift
 done
 
-# setup for ui
-timestamp_file="$CLI_CACHE_DIR/last_update_check"
+# Check for updates if enabled
+if [ "$UPDATE_CHECK" = "true" ]; then
+  # setup for ui
+  timestamp_file="$CLI_CACHE_DIR/last_update_check"
 
-# Time interval in seconds (6 hours = 21600 seconds)
-interval=$((6 * 60 * 60))
+  # Time interval in seconds (6 hours = 21600 seconds)
+  interval=$((6 * 60 * 60))
 
-# Determine whether to run the update check
-current_time=$(date +%s)
-last_check_time=$(cat "$timestamp_file" 2>/dev/null || echo 0)
+  # Determine whether to run the update check
+  current_time=$(date +%s)
+  last_check_time=$(cat "$timestamp_file" 2>/dev/null || echo 0)
 
-if ((current_time - last_check_time >= interval)); then
-  check_update "A new version of $CLI_NAME has been found would you like to upgrade(y/n)"
-  echo "$current_time" >"$timestamp_file"
+  if ((current_time - last_check_time >= interval)); then
+    check_update "A new version of $CLI_NAME has been found would you like to upgrade(y/n)"
+    echo "$current_time" >"$timestamp_file"
+  fi
 fi
 core_dep_ch
 
