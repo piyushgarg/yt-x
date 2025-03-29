@@ -106,9 +106,9 @@ UPDATE_CHECK: $UPDATE_CHECK
 "
 }
 
-find_config_option () {
-    local option=$1
-    awk -F': ' "/^$option:/ && !/#/ {print \$2}" "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
+find_config_option() {
+  local option=$1
+  awk -F': ' "/^$option:/ && !/#/ {print \$2}" "$CLI_CONFIG_DIR/${CLI_NAME}.conf"
 }
 
 load_config() {
@@ -288,7 +288,7 @@ confirm() {
     gum confirm "$1"
   else
     echo "$CLI_HEADER" >/dev/stderr
-    printf "%s [y/N]: " "$1" > /dev/stderr
+    printf "%s [y/N]: " "$1" >/dev/stderr
     read -r CONFIRMED
     case "$CONFIRMED" in
     y | Y)
@@ -509,14 +509,60 @@ download_preview_images() {
   done
   curl -s -K "$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt" 2>/dev/null &
 }
+download_rofi_icons() {
+  local url video filename
+
+  echo generating preview in the background...
+
+  ids="$(echo "$1" | jq '.entries[].id' -r 2>/dev/null)"
+  urls="$(echo "$1" | jq '.entries[].thumbnails[-1].url' -r 2>/dev/null)"
+  [ -z "$ids" ] && return 1
+  [ -z "$urls" ] && return 1
+
+  [ -f "$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt" ] && rm "$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt"
+  lines="$(echo "$ids" | wc -l)"
+  for i in $(seq 1 "$lines"); do
+    video=$(echo "$1" | jq ".entries[$((i - 1))]")
+    url=$(echo "$urls" | head -n $i | tail -n 1)
+    filename=$(echo "$url" | generate_sha256)
+    if ! [ -s "$CLI_PREVIEW_IMAGES_CACHE_DIR/${filename}.jpg" ]; then
+      echo "url = \"${2}${url}\"" >>"$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt"
+      echo "output = \"$CLI_PREVIEW_IMAGES_CACHE_DIR/${filename}.jpg\"" >>"$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt"
+    fi
+  done
+  curl -s -K "$CLI_PREVIEW_IMAGES_CACHE_DIR/previews.txt" 2>/dev/null
+
+}
+get_line() {
+  head -n "$1" | tail -n 1 | tr -d "\n"
+}
 launcher_with_preview() {
   case "$PREFERRED_SELECTOR" in
   rofi)
+    local titles icons icon title
     if [ -z "$ROFI_THEME" ]; then
-      rofi_selection=$(while read -r line; do echo "$line" | sed -r 's/\x1B(\[[0-9;]*[a-zA-Z]|\(B)//g'; done | rofi -sort -matching fuzzy -dmenu -i -width 1500 -p "" -mesg "$1" -matching fuzzy -sorting-method fzf)
+      titles=$(while read -r line; do echo "$line" | sed -r 's/\x1B(\[[0-9;]*[a-zA-Z]|\(B)//g'; done)
+      icons=$(echo "$search_results" | jq '.entries[].thumbnails[-1].url' -r)
+      lines=$(echo $titles | wc -l)
+      rofi_selection=$(
+        titles=$(echo "$titles" | while read -r line; do echo "$line" | sed -r 's/\x1B(\[[0-9;]*[a-zA-Z]|\(B)//g'; done)
+        icons=$(echo "$search_results" | jq '.entries[].thumbnails[-1].url' -r)
+        lines=$(echo "$titles" | wc -l)
+        for i in $(seq 1 $lines); do
+          title=$(echo "$titles" | get_line "$i")
+          icon=$(echo "$icons" | get_line "$i" | generate_sha256)
+          printf "%s\0icon\x1f%s/%s.jpg\n" "$title" "$CLI_PREVIEW_IMAGES_CACHE_DIR" "$icon"
+        done | rofi -sort -matching fuzzy -dmenu -i -width 1500 -p "" -mesg "$1" -matching fuzzy -sorting-method fzf -show-icons
+      )
       [ -z "$rofi_selection" ] && echo "Exit" || echo "$rofi_selection"
     else
-      rofi_selection=$(while read -r line; do echo "$line" | sed -r 's/\x1B(\[[0-9;]*[a-zA-Z]|\(B)//g'; done | rofi -no-config -theme "$ROFI_THEME" -sort -matching fuzzy -dmenu -i -p "" -mesg "Select Action" -matching fuzzy -sorting-method fzf)
+      titles=$(while read -r line; do echo "$line" | sed -r 's/\x1B(\[[0-9;]*[a-zA-Z]|\(B)//g'; done)
+      icons=$(jq '.entries[].thumbnails[-1].url' -r)
+      rofi_selection=$(
+        for i in $(echo $titles | wc -l); do
+          echo "$(echo -n "$titles" | get_line "$i")\0icon\xf1$(echo "$icons" | get_line "$i" | generate_sha256).jpg"
+        done | rofi -sort -matching fuzzy -dmenu -i -width 1500 -p "" -mesg "$1" -matching fuzzy -sorting-method fzf -show-icons
+      )
       [ -z "$rofi_selection" ] && echo "Exit" || echo "$rofi_selection"
     fi
     ;;
@@ -751,7 +797,7 @@ playlist_explorer() {
     "Main Menu")
       break
       ;;
-    Back|"")
+    Back | "")
       break
       ;;
     Exit)
@@ -1151,7 +1197,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
         yt-dlp "$video_url" -x -f 'bestaudio' --audio-format mp3 --output "$DOWNLOAD_DIRECTORY/audio/individual/%(channel)s/%(title)s.%(ext)s" $PREFERRED_BROWSER
         send_notification "Completed downloading $title"
         ;;
-      Back|"")
+      Back | "")
         break
         ;;
       Shell)
@@ -1237,7 +1283,7 @@ playlists_explorer() {
     clear
     playlist_title="$(echo "$playlist_title" | sed 's/"/\\"/g')"
     case "$playlist_title" in
-    *Back|"")
+    *Back | "")
       break
       ;;
     *Exit)
@@ -1378,7 +1424,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Action" | sed 's/.*  //g')"
   Search)
     clear
     if [ -z "$CMD_SEARCH_TERMS" ]; then
-           search_term="$(prompt "Enter term to search for")"
+      search_term="$(prompt "Enter term to search for")"
       # Exit if user presses ESC or leaves search empty in rofi
       if [ "$PREFERRED_SELECTOR" = "rofi" ] && [ -z "$search_term" ]; then
         echo "Search canceled. No search term provided."
@@ -1646,7 +1692,7 @@ ${RED}󰈆${RESET}  Exit
           send_notification "Sync cancelled"
         fi
         ;;
-      Back|"")
+      Back | "")
         break
         ;;
       Exit)
@@ -1659,7 +1705,7 @@ ${RED}󰈆${RESET}  Exit
       esac
     done
     ;;
-  Exit|"")
+  Exit | "")
     byebye
     ;;
   *)
