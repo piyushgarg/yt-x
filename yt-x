@@ -147,7 +147,7 @@ load_config() {
   PREFERRED_BROWSER="$(find_config_option "PREFERRED_BROWSER")"
   [ -n "$PREFERRED_BROWSER" ] && PREFERRED_BROWSER="--cookies-from-browser $PREFERRED_BROWSER"
 
-  NO_OF_SEARCH_RESULTS="$(find_config_option "NUMBER_OF_SEARCH_RESULTS")"
+  NO_OF_SEARCH_RESULTS="$(find_config_option "NO_OF_SEARCH_RESULTS")"
   [ -z "$NO_OF_SEARCH_RESULTS" ] && NO_OF_SEARCH_RESULTS=30
 
   NOTIFICATION_DURATION="$(find_config_option "NOTIFICATION_DURATION")"
