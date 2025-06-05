@@ -816,7 +816,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
             cached_playlist="$CLI_AUTO_GEN_PLAYLISTS/$(generate_sha256 "$url").m3u8"
 
             if ! [ -s "$cached_playlist" ]; then
-              _mix_data=$(yt-dlp "url" --flat-playlist -J)
+              _mix_data=$(yt-dlp "$url" --flat-playlist -J)
               [ -z "$_mix_data" ] && send_notification "Failed to get mix data" && continue
               echo '#EXTM3U' >>"$cached_playlist"
 
