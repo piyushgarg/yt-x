@@ -281,4 +281,3 @@ Need help? Join the community on Discord:
 
 Give the project a star and consider contributing to the codebase.
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y8ZAA7N)
