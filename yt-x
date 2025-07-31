@@ -187,7 +187,9 @@ load_config() {
       [ -s "$CLI_EXTENSION_DIR/$ext" ] && . "$CLI_EXTENSION_DIR/$ext"
     done
   fi
-  print_config >"$CLI_CONFIG_DIR/${CLI_NAME}.conf"
+  if ! [ -s "$CLI_CONFIG_DIR/${CLI_NAME}.conf"  ];then
+    print_config >"$CLI_CONFIG_DIR/${CLI_NAME}.conf"
+  fi
   export FZF_DEFAULT_OPTS PRETTY_PRINT PLATFORM IMAGE_RENDERER
 }
 send_notification() {
