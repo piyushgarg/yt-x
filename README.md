@@ -206,6 +206,11 @@ screenshot-directory=~/Pictures/mpv_screenshots/
 # enable hardware accelaration
 hwdec=auto
 vo=gpu
+
+# for subs something like this
+slang=en,eng,enUS,en-US
+sub-auto=fuzzy
+ytdl-raw-options=ignore-config=,sub-lang="en,eng,enUS,en-US",write-sub=,write-auto-sub=
 ```
 
 To customise download options with yt-dlp you can add something like this to `yt-dlp.conf` (you can also use the ui to edit `yt-dlp.conf`)
