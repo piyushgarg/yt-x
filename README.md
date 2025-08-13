@@ -6,6 +6,25 @@
 ![GitHub Release](https://img.shields.io/github/v/release/Benex254/yt-x)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/Benex254/yt-x)
 
+>[!important]
+> the script is currently undergoing a rewrite (previously i focused
+> on features now i want to focus on maintainability)
+>primarily focusing on improving
+> state management, the current way its done is hard to follow
+> and quite frankly hard to maintain.
+> The new way  will use a file based
+> state system (history.stack, as i want to call it, which will store list of json, each json representing the current state)
+> this will make things easy to follow and debug, than an in memory based state management
+> this comes with the benefit that you can resume a
+> session
+>
+> so it will be a while before i look at issues or prs and recommend not to submit either
+>
+> though i think in two weeks i should be done
+>
+>@Benexl 😁
+>
+
 Browse YouTube from your terminal.
 Plus other sites yt-dlp supports.
 
