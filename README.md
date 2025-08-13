@@ -227,6 +227,11 @@ To customise download options with yt-dlp you can add something like this to `yt
 --merge-output-format mkv
 ```
 
+> [!TIP]
+> I also recommend setting up a po token. read more here https://github.com/yt-dlp/yt-dlp/wiki/PO-Token-Guide
+>
+> Recommended plugin to help you with that https://github.com/Brainicism/bgutil-ytdlp-pot-provider
+
 For additional enhancements, consider:
 
 - [uosc](https://github.com/tomasklaen/uosc) for a modern `mpv` UI.
