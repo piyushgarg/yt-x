@@ -20,6 +20,8 @@
 >
 > so it will be a while before i look at issues or prs and recommend not to submit either
 >
+>meanwhile lets talk on discord : )
+>
 > this will all be done in a separate branch so the script will remain usable
 >
 > though i think in two weeks i should be done
