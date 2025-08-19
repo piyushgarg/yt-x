@@ -550,7 +550,7 @@ init_pretty_print() {
 }
 byebye() {
   clear
-  echo "Have a good day $USERNAME"
+  echo "Have a good day $USER"
   exit "${1:-0}"
 }
 prompt() {
