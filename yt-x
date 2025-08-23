@@ -10,6 +10,7 @@ CLI_HEADER='
 ░░░╚═╝░░░░░░╚═╝░░░░░░░░░╚═╝░░╚═╝
 '
 
+CLI_HEADER=""
 # CLI_NAME=${0##*/}
 CLI_NAME="yt-x"
 
@@ -29,6 +30,13 @@ CLI_PREVIEW_SCRIPTS_DIR="$CLI_CACHE_DIR/preview_text"
 [ -d "$CLI_PREVIEW_SCRIPTS_DIR" ] || mkdir -p "$CLI_PREVIEW_SCRIPTS_DIR"
 [ -d "$CLI_YT_DLP_ARCHIVE" ] || mkdir -p "$CLI_YT_DLP_ARCHIVE"
 [ -d "$CLI_AUTO_GEN_PLAYLISTS" ] || mkdir -p "$CLI_AUTO_GEN_PLAYLISTS"
+export FIFO_UEBERZUG="$CLI_CONFIG_DIR/ueberzug-$$"
+if [ ! -f "$FIFO_UEBERZUG" ]; then
+  mkfifo "$FIFO_UEBERZUG"
+  ueberzug layer -s <"$FIFO_UEBERZUG" -p json &
+  export UEBERZUG_PID=$!
+  exec 3>"$FIFO_UEBERZUG"
+fi
 
 case "$(uname -a)" in
 *ndroid) PLATFORM="android" ;;
@@ -274,7 +282,8 @@ fzf_preview() {
     case "$PLATFORM" in
     android) chafa -s "$dim" "$file" ;;
     windows) chafa -f sixel -s "$dim" "$file" ;;
-    *) chafa -s "$dim" "$file" ;;
+    #*) chafa -s "$dim" "$file" ;;
+    *) echo "{\"action\": \"add\", \"identifier\": \"preview\", \"x\": 3, \"y\": 20, \"width\": ${FZF_PREVIEW_COLUMNS}, \"height\": ${FZF_PREVIEW_LINES}, \"scaler\": \"fit_contain\", \"path\": \"$file\"}" > "$FIFO_UEBERZUG" ;;
     esac
     echo
 
@@ -386,28 +395,28 @@ generate_text_preview() {
 
     # some duration calculations
     duration=$(echo "$video" | jq '
-    try 
+    try
       if .duration>=3600 then
-        if .duration/3600|floor == 1 then 
-          .duration/3600|floor|tostring + " hour" 
-        else 
-          .duration/3600|floor|tostring + " hours" 
-        end 
+        if .duration/3600|floor == 1 then
+          .duration/3600|floor|tostring + " hour"
+        else
+          .duration/3600|floor|tostring + " hours"
+        end
       elif .duration>=60 then
-        if .duration/60|floor == 1 then 
-          .duration/60|floor|tostring + " min" 
-        else 
-          .duration/60|floor|tostring + " mins" 
-        end 
-      else 
-        if .duration == 1 then 
-          .duration/1|floor|tostring + " sec" 
-        else 
-          .duration/1|floor|tostring + " secs" 
-        end 
+        if .duration/60|floor == 1 then
+          .duration/60|floor|tostring + " min"
+        else
+          .duration/60|floor|tostring + " mins"
+        end
+      else
+        if .duration == 1 then
+          .duration/1|floor|tostring + " sec"
+        else
+          .duration/1|floor|tostring + " secs"
+        end
       end
     catch
-      "Unknown" 
+      "Unknown"
     ' -r)
 
     # some date calculations
@@ -551,7 +560,9 @@ init_pretty_print() {
   fi
 }
 byebye() {
-  clear
+  exec 3>&-
+  rm -f "$FIFO_UEBERZUG"
+  #clear
   echo "Have a good day $USER"
   exit "${1:-0}"
 }
@@ -563,7 +574,7 @@ prompt() {
       rofi -dmenu \
         -p "$1" \
         -mesg "$(printf "\nSearch history:\n%s\n(Enter !&lt;n&gt; to select from history. Example: !1)\n" "$HISTORY")" \
-        <<< "" 
+        <<< ""
       PROMPT_CONTEXT=""
     else
       rofi -dmenu -p "$1: "
@@ -602,7 +613,7 @@ core_dep_ch() {
   ! command -v "jq" >/dev/null 2>&1 && echo jq is not installed and is a core dep please install it to proceed && exit 1
   ! command -v "fzf" >/dev/null 2>&1 && echo fzf is not installed and is a core dep please install it to proceed && exit 1
 }
-trap byebye INT TERM
+trap byebye INT TERM EXIT
 PREVIEW_SCRIPT_FOR_VIDEOS="
 
   title={}
@@ -640,9 +651,9 @@ PREVIEW_SCRIPT_FOR_CHANNELS="
     |join(\"\")
     '
     );
-    
+
     description=\$(echo \"\$video\"| jq '.description' -r);
-    
+
     if [ -f \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" ];then fzf_preview \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" 2>/dev/null;
     else echo loading preview image...;
     fi
@@ -672,7 +683,7 @@ PREVIEW_SCRIPT_FOR_CHANNELS_EXPLORER="
     title=\"\$(echo {}|sed 's/\"/\\\\\\\"/g')\"
     video=\$(echo \"\$channels_data\" | jq -r \".entries | map(select(.title == \\\"\$title\\\" )) | .[0]\" 2>/dev/null)
 
-    id=\$(echo \$video | jq '.thumbnails[-1].url' -r | generate_sha256);   
+    id=\$(echo \$video | jq '.thumbnails[-1].url' -r | generate_sha256);
 
     channel=\$(echo \"\$video\"| jq '.channel' -r);
 
@@ -688,9 +699,9 @@ PREVIEW_SCRIPT_FOR_CHANNELS_EXPLORER="
     |join(\"\")
     '
     );
-    
+
     description=\$(echo \"\$video\"| jq '.description' -r);
-    
+
     if [ -f \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" ];then fzf_preview \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" 2>/dev/null;
     else echo loading preview image...;
     fi
@@ -720,9 +731,9 @@ PREVIEW_SCRIPT_FOR_PLAYLISTS_EXPLORER="
     video=\$(echo \"\$playlist_results\" | jq -r \".entries | map(select(.title == \\\"\$title\\\" )) | .[0]\" 2>/dev/null)
     title=\"\$(echo \"\$title\"|sed 's/^.. //g')\"
 
-    id=\$(echo \$video | jq '.thumbnails[-1].url' -r | generate_sha256);   
+    id=\$(echo \$video | jq '.thumbnails[-1].url' -r | generate_sha256);
 
-    
+
     if [ -f \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" ];then fzf_preview \"$CLI_PREVIEW_IMAGES_CACHE_DIR/\${id}.jpg\" 2>/dev/null;
     else echo loading preview image...;
     fi
@@ -743,9 +754,9 @@ playlist_explorer() {
   while true; do
     [ "$DOWNLOAD_IMAGES" = 0 ] &&
       search_results=$(echo "$search_results" | jq "
-          .entries=(.entries 
+          .entries=(.entries
           | to_entries
-          | map(.value.title=\"\(.key+1|tostring| if (.|length) < 2 then \"0\" + . else . end) \"+.value.title) 
+          | map(.value.title=\"\(.key+1|tostring| if (.|length) < 2 then \"0\" + . else . end) \"+.value.title)
           |map(.value))
           ") && ! [ "$ENABLE_PREVIEW" = "true" ] || ! [ "$PREFERRED_SELECTOR" = "fzf" ] && DOWNLOAD_IMAGES=1
     titles=$(echo "$search_results" | jq '.entries[].title' -r 2>/dev/null)
@@ -757,6 +768,7 @@ playlist_explorer() {
       title="$(printf "%s\nNext\nPrevious\nBack\nMain Menu\nExit" "$titles" | launcher "select video" | tr -d '\n' | sed 's/^[^0-9]  //g')"
     fi
     clear
+    echo '{"action": "remove", "identifier": "preview"}' > "$FIFO_UEBERZUG"
     title="$(echo "$title" | sed 's/"/\\"/g')"
     case "$title" in
     Next)
@@ -810,6 +822,7 @@ ${CYAN}${RESET}  Shell
 ${CYAN}󰌍${RESET}  Back
 ${RED}󰈆${RESET}  Exit" | launcher "Select Media Action" | sed 's/.  //g')"
       clear
+      echo '{"action": "remove", "identifier": "preview"}' > "$FIFO_UEBERZUG"
       case "$media_action" in
       "Play All")
         if echo "$url" | grep -q "list=RD" || echo "$urlForAll" | grep -q "list=RD" || [ "$(echo "$search_results" | jq 'has("uploader_url") | not')" = "true" ]; then
@@ -1247,9 +1260,9 @@ playlists_explorer() {
     fi
   )
   playlist_results=$(echo "$playlist_results" | jq "
-          .entries=(.entries 
+          .entries=(.entries
           | to_entries
-          | map(.value.title=\"\(.key+1|tostring| if (.|length) < 2 then \"0\" + . else . end) \"+.value.title) 
+          | map(.value.title=\"\(.key+1|tostring| if (.|length) < 2 then \"0\" + . else . end) \"+.value.title)
           |map(.value))
           ")
   playlist_video_titles=$(echo "$playlist_results" | jq '.entries[].title' -r 2>/dev/null)
@@ -1263,6 +1276,7 @@ playlists_explorer() {
       playlist_title="$(printf "%s\nBack\nExit" "$playlist_video_titles" | launcher "select video" | tr -d '\n' | sed 's/^[^0-9]  //g')"
     fi
     clear
+    echo '{"action": "remove", "identifier": "preview"}' > "$FIFO_UEBERZUG"
     playlist_title="$(echo "$playlist_title" | sed 's/"/\\"/g')"
     case "$playlist_title" in
     *Back|"")
@@ -1328,6 +1342,7 @@ ${RED}󰈆${RESET}  Exit
       ;;
     Search)
       clear
+      echo '{"action": "remove", "identifier": "preview"}' > "$FIFO_UEBERZUG"
       search_term="$(prompt "Enter term to search for" | jq -Rr '@uri')"
       url="$uploader_url_base/search?query=$search_term"
       search_results=$(run_yt_dlp "$url")
@@ -1405,6 +1420,7 @@ ${RED}󰈆${RESET}  Exit" | launcher "Select Action" | sed 's/.*  //g')"
     ;;
   Search)
     clear
+    echo '{"action": "remove", "identifier": "preview"}' > "$FIFO_UEBERZUG"
     PROMPT_CONTEXT="Search"
     if [ -z "$CMD_SEARCH_TERMS" ]; then
          search_term="$(prompt "Enter term to search for")"
@@ -1563,6 +1579,7 @@ ${RED}󰈆${RESET}  Exit
         unset search_term
         while true; do
           clear
+          echo '{"action": "remove", "identifier": "preview"}' > "$FIFO_UEBERZUG"
           [ -z "$search_term" ] && search_term=$(prompt "What channel would you like to explore?") && url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAg%253D%253D" && channels_data=$(
             if command -v "gum" >/dev/null 2>&1; then
               gum spin --show-output -- yt-dlp "$url" -J --flat-playlist --extractor-args youtubetab:approximate_date $PREFERRED_BROWSER --playlist-start 1 --playlist-end $NO_OF_SEARCH_RESULTS
@@ -1572,6 +1589,7 @@ ${RED}󰈆${RESET}  Exit
             fi
           ) && download_preview_images "$channels_data" "https:"
           clear
+          echo '{"action": "remove", "identifier": "preview"}' > "$FIFO_UEBERZUG"
           channels=$(echo "$channels_data" | jq '.entries[].channel' -r)
           export channels_data SHELL
           channel_name=$(printf "%s\nBack\nExit" "$channels" | launcher_with_preview "Select Channel" "$PREVIEW_SCRIPT_FOR_CHANNELS_EXPLORER")
@@ -1585,6 +1603,7 @@ ${RED}󰈆${RESET}  Exit
         ;;
       Explore\ Playlists)
         clear
+        echo '{"action": "remove", "identifier": "preview"}' > "$FIFO_UEBERZUG"
         search_term=$(prompt "What playlist would you like to explore?")
         url="https://www.youtube.com/results?search_query=$search_term&sp=EgIQAw%253D%253D"
         PLAYLISTS_EXTRA_ARGS="--playlist-start 1 --playlist-end $NO_OF_SEARCH_RESULTS"
@@ -1593,6 +1612,7 @@ ${RED}󰈆${RESET}  Exit
         ;;
       Search\ History)
         clear
+        echo '{"action": "remove", "identifier": "preview"}' > "$FIFO_UEBERZUG"
         while true; do
           ! [ -s "$CLI_CACHE_DIR/search_history.txt" ] && echo "No search history or disabed" && sleep "$NOTIFICATION_DURATION" && main
           search_term="$(printf "$(tac "$CLI_CACHE_DIR/search_history.txt")\nBack" | launcher "Search for" | jq -Rr '@uri')"
@@ -1753,7 +1773,7 @@ usage() {
   printf "\
 A script written to browse youtube from the terminal
 
-Usage: %s [arguments] [options] 
+Usage: %s [arguments] [options]
 
 Commandline options override the config
 
@@ -1795,7 +1815,7 @@ arguments:
 
 Examples:
   $CLI_NAME --generate-desktop-entry
-  $CLI_NAME completions --fish 
+  $CLI_NAME completions --fish
 " "$CLI_NAME"
   exit "$1"
 }
@@ -1902,14 +1922,14 @@ complete -c $CLI_NAME --no-files --short-option U --long-option update --descrip
 complete -c $CLI_NAME --no-files --short-option p --long-option player --description 'the video player to use' --condition 'not __fish_seen_subcommand_from completions' --exclusive --arguments 'mpv vlc'
 complete -c $CLI_NAME --no-files --short-option x --long-option extension --description 'The extension to use' --condition 'not __fish_seen_subcommand_from completions' --exclusive --arguments \"(command ls $CLI_EXTENSION_DIR)\"
 complete -c $CLI_NAME --no-files --short-option s --long-option preferred-selector --description 'your preferred selector' --condition 'not __fish_seen_subcommand_from completions' --exclusive --arguments 'fzf rofi'
-complete -c $CLI_NAME --no-files --short-option E --long-option generate-desktop-entry --description 'generate desktop entry info' --condition 'not __fish_seen_subcommand_from completions' 
+complete -c $CLI_NAME --no-files --short-option E --long-option generate-desktop-entry --description 'generate desktop entry info' --condition 'not __fish_seen_subcommand_from completions'
 
-complete -c $CLI_NAME --no-files --long-option preview --description 'enable preview window' --condition 'not __fish_seen_subcommand_from completions' 
-complete -c $CLI_NAME --no-files --long-option no-preview --description 'disable preview window' --condition 'not __fish_seen_subcommand_from completions' 
+complete -c $CLI_NAME --no-files --long-option preview --description 'enable preview window' --condition 'not __fish_seen_subcommand_from completions'
+complete -c $CLI_NAME --no-files --long-option no-preview --description 'disable preview window' --condition 'not __fish_seen_subcommand_from completions'
 
-complete -c $CLI_NAME --force-files --long-option rofi-theme --description 'the path to your rofi config file' --condition 'not __fish_seen_subcommand_from completions' 
+complete -c $CLI_NAME --force-files --long-option rofi-theme --description 'the path to your rofi config file' --condition 'not __fish_seen_subcommand_from completions'
 
-complete -c $CLI_NAME --no-files --short-option S --long-option search --description 'the terms you want to search' --condition 'not __fish_seen_subcommand_from completions' 
+complete -c $CLI_NAME --no-files --short-option S --long-option search --description 'the terms you want to search' --condition 'not __fish_seen_subcommand_from completions'
 
 complete -c $CLI_NAME --no-files --short-option z --long-option zsh --description 'print zsh completions' --condition '__fish_seen_subcommand_from completions'
 complete -c $CLI_NAME --no-files --short-option b --long-option bash --description 'print bash completions' --condition '__fish_seen_subcommand_from completions'
