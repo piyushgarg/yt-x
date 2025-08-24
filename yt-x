@@ -282,7 +282,7 @@ fzf_preview() {
     case "$PLATFORM" in
     android) chafa -s "$dim" "$file" ;;
     windows) chafa -f sixel -s "$dim" "$file" ;;
-    #*) chafa -s "$dim" "$file" ;;
+    #*) chafa -s "$dim" -f kitty "$file" ;;
     *) echo "{\"action\": \"add\", \"identifier\": \"preview\", \"x\": 3, \"y\": 20, \"width\": ${FZF_PREVIEW_COLUMNS}, \"height\": ${FZF_PREVIEW_LINES}, \"scaler\": \"fit_contain\", \"path\": \"$file\"}" > "$FIFO_UEBERZUG" ;;
     esac
     echo
